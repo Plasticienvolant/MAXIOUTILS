@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Réservoir de fiches de cours — tablette</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--line:#d8deea;--ink:#1d2433;--muted:#647089;--accent:#2e5bff;--soft:#eef3ff}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  h1{margin:0 0 6px 0;font-size:24px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{max-width:1600px;margin:auto;padding:18px}
+  .status{padding:10px 12px;border-radius:10px;background:#eef3ff;border:1px solid #d9e3ff;color:#2847a1;margin-bottom:14px;min-height:42px}
+  .toolbar,.filters,.meta,.detailGrid,.actionRow{display:grid;gap:12px}
+  .toolbar{grid-template-columns:1.3fr repeat(4,auto);align-items:end;margin-bottom:14px}
+  .filters{grid-template-columns:1.4fr repeat(5,minmax(0,1fr));margin-bottom:14px}
+  .layout{display:grid;grid-template-columns:520px 1fr;gap:16px;align-items:start}
+  .actionRow{grid-template-columns:1.3fr repeat(2,auto);align-items:end;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .leftCol{position:sticky;top:96px;align-self:start}
+  h2{margin:0 0 12px 0;font-size:18px}
+  h3{margin:0 0 10px 0;font-size:16px}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,select,button,textarea{font:inherit}
+  input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid #cfd6e4;background:#fff;min-height:48px}
+  button{padding:13px 16px;border:none;border-radius:12px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;min-height:48px}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .listWrap{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fbfcff}
+  .item{padding:16px 14px;border-bottom:1px solid #e7ebf3;cursor:pointer}
+  .item:last-child{border-bottom:none}
+  .item:hover{background:#f6f9ff}
+  .item.active{background:#eaf1ff}
+  .itemTitle{font-weight:700;margin-bottom:6px;font-size:16px}
+  .itemMeta{font-size:12px;color:var(--muted);line-height:1.4}
+  .pillbox{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{background:var(--soft);border:1px solid #d9e3ff;padding:5px 9px;border-radius:999px;font-size:12px}
+  .muted{color:var(--muted)}
+  .meta{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:14px}
+  .detailGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .section{border-top:1px solid #ecf0f6;padding-top:14px;margin-top:14px}
+  .value{white-space:pre-wrap;line-height:1.5}
+  .empty{padding:18px;color:var(--muted)}
+  .count{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .small{font-size:13px;color:var(--muted)}
+  .editHint{font-size:12px;color:var(--muted);margin-top:6px}
+  .tabletBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--soft);border:1px solid #d9e3ff;font-size:12px;color:#2847a1;margin-left:8px}
+  @media print{
+    header,.toolbar,.filters,.leftCol,.status{display:none !important}
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    .layout{display:block}
+    .card{border:none;padding:0}
+  }
+  @media (max-width: 1200px){
+    .layout{grid-template-columns:1fr}
+    .leftCol{position:static}
+    .filters{grid-template-columns:1fr 1fr}
+    .meta,.detailGrid{grid-template-columns:1fr 1fr}
+    .toolbar,.actionRow{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width: 900px){
+    body{font-size:17px}
+    h1{font-size:28px}
+    h2{font-size:21px}
+    h3{font-size:18px}
+    .wrap{padding:14px}
+    .card{padding:18px}
+    .listWrap{max-height:none}
+    .toolbar,.filters,.meta,.detailGrid,.actionRow{grid-template-columns:1fr}
+    .itemMeta{font-size:13px}
+    .leftCol{top:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Réservoir de fiches de cours <span class="tabletBadge">tablette</span></h1>
+  <div class="sub">Version simple : charger le classeur, filtrer les fiches, ouvrir une fiche, l’afficher, l’imprimer ou la renvoyer vers l’app de création.</div>
+</header>
+<div class="wrap">
+  <div id="status" class="status">Chargez d’abord votre classeur noyau.</div>
+
+  <div class="toolbar">
+    <div>
+      <label>Classeur Excel</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </div>
+    <button type="button" class="secondary" id="resetBtn">Réinitialiser les filtres</button>
+    <button type="button" class="secondary" id="printBtn">Imprimer la fiche ouverte</button>
+    <button type="button" class="secondary" id="downloadBtn">Télécharger le classeur chargé</button>
+    <button type="button" id="editBtnTop">Éditer la fiche ouverte</button>
+  </div>
+
+  <div class="actionRow card">
+    <div>
+      <label>Lien de l’app de création</label>
+      <input id="creationAppUrl" placeholder="Collez ici le lien de l’app de création si elle est en ligne" />
+      <div class="editHint">Le bouton Éditer mémorise aussi l’ID de la fiche dans le navigateur pour faciliter le passage entre les deux apps.</div>
+    </div>
+    <button type="button" class="secondary" id="saveCreationUrlBtn">Mémoriser ce lien</button>
+    <button type="button" id="editBtn">Éditer la fiche ouverte</button>
+  </div>
+
+  <div class="filters card">
+    <div>
+      <label>Recherche</label>
+      <input id="searchInput" placeholder="Titre, questionnement, vocabulaire, classe…" />
+    </div>
+    <div>
+      <label>Cycle</label>
+      <select id="filterCycle"><option value="">Tous</option></select>
+    </div>
+    <div>
+      <label>Niveau</label>
+      <select id="filterNiveau"><option value="">Tous</option></select>
+    </div>
+    <div>
+      <label>Axe</label>
+      <select id="filterAxe"><option value="">Tous</option></select>
+    </div>
+    <div>
+      <label>Notion</label>
+      <select id="filterNotion"><option value="">Toutes</option></select>
+    </div>
+    <div>
+      <label>Statut</label>
+      <select id="filterStatut"><option value="">Tous</option></select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="leftCol">
+      <div class="card">
+        <h2>Liste des fiches</h2>
+        <div id="resultCount" class="count">0 fiche</div>
+        <div id="ficheList" class="listWrap"><div class="empty">Aucune fiche chargée.</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="detailCard">
+      <h2 id="detailTitle">Aucune fiche ouverte</h2>
+      <div id="detailBody" class="empty">Ouvrez une fiche dans la liste de gauche.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let workbook = null;
+let workbookName = 'classeur_noyau_fiche_de_cours.xlsx';
+let sheetsData = {};
+let fiches = [];
+let ficheCompetences = [];
+let ficheReferences = [];
+let competences = [];
+let oeuvres = [];
+let filteredFiches = [];
+let currentId = '';
+const EDIT_STORAGE_KEY = 'ficheCoursEditRequest';
+const CREATION_URL_KEY = 'ficheCoursCreationAppUrl';
+const RETURN_STORAGE_KEY = 'ficheCoursReturnRequest';
+const RESERVOIR_URL_KEY = 'ficheCoursReservoirAppUrl';
+
+function byId(id){ return document.getElementById(id); }
+function setStatus(msg){ byId('status').textContent = msg; }
+function normalize(v){ return (v ?? '').toString().trim(); }
+function uniq(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')); }
+function rowsFromSheet(name){ return sheetsData[name] || []; }
+function optionize(select, values, first='Tous'){
+  select.innerHTML='';
+  const firstOpt=document.createElement('option');
+  firstOpt.value='';
+  firstOpt.textContent=first;
+  select.appendChild(firstOpt);
+  values.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v; o.textContent=v; select.appendChild(o);
+  });
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+
+function getPendingOpenId(){
+  const fromUrl = new URLSearchParams(window.location.search).get('open');
+  if(fromUrl) return normalize(fromUrl);
+  try {
+    const raw = localStorage.getItem(RETURN_STORAGE_KEY);
+    if(!raw) return '';
+    const payload = JSON.parse(raw);
+    return normalize(payload.ficheId);
+  } catch(e){ return ''; }
+}
+
+function rememberReservoirUrl(){
+  try {
+    localStorage.setItem(RESERVOIR_URL_KEY, window.location.href.split('?')[0]);
+  } catch(e){}
+}
+
+function parseWorkbook(arrayBuffer){
+  workbook = XLSX.read(arrayBuffer, {type:'array'});
+  sheetsData = {};
+  workbook.SheetNames.forEach(name=>{
+    sheetsData[name] = XLSX.utils.sheet_to_json(workbook.Sheets[name], {defval:''});
+  });
+  fiches = rowsFromSheet('Fiches_de_cours').filter(r => normalize(r.ID_fiche));
+  ficheCompetences = rowsFromSheet('Fiche_Competences');
+  ficheReferences = rowsFromSheet('Fiche_References');
+  competences = rowsFromSheet('Competences');
+  oeuvres = rowsFromSheet('Oeuvres');
+  initFilters();
+  applyFilters();
+  const pendingId = getPendingOpenId();
+  if(pendingId && fiches.some(f=>normalize(f.ID_fiche)===pendingId)){
+    openFiche(pendingId);
+    try { localStorage.removeItem(RETURN_STORAGE_KEY); } catch(e){}
+    setStatus(`Classeur chargé : ${workbookName}. Retour sur ${pendingId}.`);
+  }
+}
+
+function initFilters(){
+  optionize(byId('filterCycle'), uniq(fiches.map(r=>normalize(r.Cycle))), 'Tous');
+  optionize(byId('filterNiveau'), uniq(fiches.map(r=>normalize(r.Niveau))), 'Tous');
+  optionize(byId('filterAxe'), uniq(fiches.map(r=>normalize(r.Axe_programme))), 'Tous');
+  optionize(byId('filterStatut'), uniq(fiches.map(r=>normalize(r.Statut_fiche))), 'Tous');
+  const notions = [];
+  fiches.forEach(r=>['Notion_1','Notion_2','Notion_3','Notion_4'].forEach(k=>{ if(normalize(r[k])) notions.push(normalize(r[k])); }));
+  optionize(byId('filterNotion'), uniq(notions), 'Toutes');
+}
+
+function ficheMatchesSearch(fiche, q){
+  const corpus = [
+    fiche.ID_fiche, fiche.Titre_fiche, fiche.Numero_sequence, fiche.Annee_scolaire,
+    fiche.Cycle, fiche.Niveau, fiche.Classe_cible, fiche.Statut_fiche,
+    fiche.Axe_programme, fiche.Questionnement_principal, fiche.Questionnement_secondaire_1,
+    fiche.Questionnement_secondaire_2, fiche.Questionnement_secondaire_3,
+    fiche.Notion_1, fiche.Notion_2, fiche.Notion_3, fiche.Notion_4,
+    fiche.Vocabulaire_1, fiche.Vocabulaire_2, fiche.Vocabulaire_3, fiche.Vocabulaire_4,
+    fiche.Vocabulaire_5, fiche.Vocabulaire_complementaire,
+    fiche.Sujet_demande_incitation, fiche.Consigne_principale, fiche.Contrainte_principale,
+    fiche.Contrainte_secondaire, fiche.Bilan, fiche.Remarques_enseignant
+  ].map(normalize).join(' ').toLowerCase();
+  return corpus.includes(q);
+}
+
+function applyFilters(){
+  const q = normalize(byId('searchInput').value).toLowerCase();
+  const cycle = byId('filterCycle').value;
+  const niveau = byId('filterNiveau').value;
+  const axe = byId('filterAxe').value;
+  const notion = byId('filterNotion').value;
+  const statut = byId('filterStatut').value;
+
+  filteredFiches = fiches.filter(f=>{
+    if(cycle && normalize(f.Cycle)!==cycle) return false;
+    if(niveau && normalize(f.Niveau)!==niveau) return false;
+    if(axe && normalize(f.Axe_programme)!==axe) return false;
+    if(statut && normalize(f.Statut_fiche)!==statut) return false;
+    if(notion){
+      const notions=[normalize(f.Notion_1),normalize(f.Notion_2),normalize(f.Notion_3),normalize(f.Notion_4)];
+      if(!notions.includes(notion)) return false;
+    }
+    if(q && !ficheMatchesSearch(f,q)) return false;
+    return true;
+  }).sort((a,b)=> normalize(a.Titre_fiche).localeCompare(normalize(b.Titre_fiche),'fr'));
+
+  renderList();
+
+  if(currentId && filteredFiches.some(f=>normalize(f.ID_fiche)===currentId)){
+    openFiche(currentId);
+  } else if(filteredFiches.length){
+    openFiche(filteredFiches[0].ID_fiche);
+  } else {
+    currentId='';
+    renderEmptyDetail();
+  }
+}
+
+function renderList(){
+  const box = byId('ficheList');
+  byId('resultCount').textContent = `${filteredFiches.length} fiche${filteredFiches.length>1?'s':''}`;
+  if(!filteredFiches.length){
+    box.innerHTML = '<div class="empty">Aucune fiche ne correspond aux filtres.</div>';
+    return;
+  }
+  box.innerHTML = filteredFiches.map(f=>{
+    const id = normalize(f.ID_fiche);
+    const active = id===currentId ? 'active' : '';
+    const meta1 = [normalize(f.Cycle), normalize(f.Niveau), normalize(f.Statut_fiche)].filter(Boolean).join(' • ');
+    const meta2 = [normalize(f.Axe_programme), normalize(f.Questionnement_principal)].filter(Boolean).join(' • ');
+    return `<div class="item ${active}" data-id="${escapeHtml(id)}">
+      <div class="itemTitle">${escapeHtml(normalize(f.Titre_fiche) || id)}</div>
+      <div class="itemMeta">${escapeHtml(meta1)}</div>
+      <div class="itemMeta">${escapeHtml(meta2)}</div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.item').forEach(el=>el.addEventListener('click', ()=>openFiche(el.dataset.id)));
+}
+
+function openFiche(id){
+  const fiche = fiches.find(f=>normalize(f.ID_fiche)===normalize(id));
+  if(!fiche) return;
+  currentId = normalize(id);
+  renderList();
+  renderDetail(fiche);
+}
+
+function getCompetencesForFiche(id){
+  return ficheCompetences
+    .filter(r=>normalize(r.ID_fiche)===normalize(id) && ['Oui','TRUE','true','1'].includes(normalize(r.Selectionnee)))
+    .map(r=>({
+      code: normalize(r.Code_competence),
+      famille: normalize(r.Famille_competence),
+      intitule: normalize(r.Intitule_competence)
+    }));
+}
+
+function getReferencesForFiche(id){
+  return ficheReferences
+    .filter(r=>normalize(r.ID_fiche)===normalize(id))
+    .sort((a,b)=>(Number(a.Rang_affichage)||999)-(Number(b.Rang_affichage)||999))
+    .map(r=>{
+      const oeuvre = oeuvres.find(o=>normalize(o.ID_oeuvre)===normalize(r.ID_oeuvre)) || {};
+      return {
+        artiste: normalize(oeuvre.Artiste),
+        titre: normalize(oeuvre.Titre),
+        domaine: normalize(oeuvre.Domaine),
+        date: normalize(oeuvre.Date),
+        questionnement: normalize(oeuvre.Questionnement_principal),
+        analyse: normalize(oeuvre.Analyse_courte),
+        id: normalize(r.ID_oeuvre)
+      };
+    });
+}
+
+function renderPills(values){
+  if(!values.length) return '<div class="small">Aucun élément.</div>';
+  return `<div class="pillbox">${values.map(v=>`<span class="pill">${escapeHtml(v)}</span>`).join('')}</div>`;
+}
+
+function block(title, value){
+  if(!normalize(value)) return '';
+  return `<div><h3>${escapeHtml(title)}</h3><div class="value">${escapeHtml(normalize(value))}</div></div>`;
+}
+
+function renderDetail(fiche){
+  byId('detailTitle').textContent = normalize(fiche.Titre_fiche) || normalize(fiche.ID_fiche);
+  const compets = getCompetencesForFiche(fiche.ID_fiche);
+  const refs = getReferencesForFiche(fiche.ID_fiche);
+  const notions = [fiche.Notion_1, fiche.Notion_2, fiche.Notion_3, fiche.Notion_4].map(normalize).filter(Boolean);
+  const vocs = [fiche.Vocabulaire_1, fiche.Vocabulaire_2, fiche.Vocabulaire_3, fiche.Vocabulaire_4, fiche.Vocabulaire_5].map(normalize).filter(Boolean);
+  if(normalize(fiche.Vocabulaire_complementaire)) vocs.push(normalize(fiche.Vocabulaire_complementaire));
+  const objectifs = [fiche.Objectif_1, fiche.Objectif_2, fiche.Objectif_3, fiche.Objectif_4].map(normalize).filter(Boolean);
+  const champs = [fiche.Champ_pratique_1, fiche.Champ_pratique_2, fiche.Champ_pratique_3].map(normalize).filter(Boolean);
+  const parcours = [];
+  if(normalize(fiche.Parcours_citoyen)==='Oui') parcours.push('Parcours citoyen');
+  if(normalize(fiche.Parcours_sante)==='Oui') parcours.push('Parcours santé');
+  if(normalize(fiche.Parcours_avenir)==='Oui') parcours.push('Parcours avenir');
+  if(normalize(fiche.Parcours_artistique_culturel)==='Oui') parcours.push('Parcours artistique et culturel');
+  const evaluations = [];
+  if(normalize(fiche.Evaluation_formative)==='Oui') evaluations.push('Évaluation formative');
+  if(normalize(fiche.Evaluation_formative_pairs)==='Oui') evaluations.push('Évaluation formative par les pairs');
+  if(normalize(fiche.Evaluation_sommative)==='Oui') evaluations.push('Évaluation sommative');
+  if(normalize(fiche.Evaluation_certificative)==='Oui') evaluations.push('Évaluation certificative');
+
+  byId('detailBody').innerHTML = `
+    <div class="meta">
+      <div><h3>ID fiche</h3><div class="value">${escapeHtml(normalize(fiche.ID_fiche))}</div></div>
+      <div><h3>Cycle / niveau</h3><div class="value">${escapeHtml([normalize(fiche.Cycle), normalize(fiche.Niveau)].filter(Boolean).join(' / '))}</div></div>
+      <div><h3>Classe cible</h3><div class="value">${escapeHtml(normalize(fiche.Classe_cible))}</div></div>
+      <div><h3>Statut</h3><div class="value">${escapeHtml(normalize(fiche.Statut_fiche))}</div></div>
+      <div><h3>Séquence</h3><div class="value">${escapeHtml(normalize(fiche.Numero_sequence))}</div></div>
+      <div><h3>Année scolaire</h3><div class="value">${escapeHtml(normalize(fiche.Annee_scolaire))}</div></div>
+      <div><h3>Travail</h3><div class="value">${escapeHtml(normalize(fiche.Travail_individuel_ou_groupe))}</div></div>
+      <div><h3>Durée</h3><div class="value">${escapeHtml([normalize(fiche.Duree_totale_sequence), normalize(fiche.Nombre_seances) ? '('+normalize(fiche.Nombre_seances)+' séance(s))' : ''].filter(Boolean).join(' '))}</div></div>
+    </div>
+
+    <div class="section">
+      <h3>Programme</h3>
+      <div class="detailGrid">
+        ${block('Axe', fiche.Axe_programme)}
+        ${block('Entrée du programme', fiche.Entree_programme)}
+        ${block('Questionnement principal', fiche.Questionnement_principal)}
+        ${block('Questionnements secondaires', [fiche.Questionnement_secondaire_1, fiche.Questionnement_secondaire_2, fiche.Questionnement_secondaire_3].map(normalize).filter(Boolean).join('\n'))}
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Notions</h3>
+      ${renderPills(notions)}
+    </div>
+
+    <div class="section">
+      <h3>Objectifs</h3>
+      <div class="value">${objectifs.length ? objectifs.map(o=>`• ${escapeHtml(o)}`).join('<br>') : '<span class="small">Aucun objectif renseigné.</span>'}</div>
+    </div>
+
+    <div class="section">
+      <h3>Vocabulaire</h3>
+      ${renderPills(vocs)}
+    </div>
+
+    <div class="section">
+      <h3>Dispositif pédagogique</h3>
+      <div class="detailGrid">
+        ${block('Sujet / demande / incitation', fiche.Sujet_demande_incitation)}
+        ${block('Consigne principale', fiche.Consigne_principale)}
+        ${block('Contrainte principale', fiche.Contrainte_principale)}
+        ${block('Contrainte secondaire', fiche.Contrainte_secondaire)}
+        ${block('Conditions temporelles', fiche.Conditions_temporelles_resume)}
+        ${block('Conditions matérielles', fiche.Conditions_materielles)}
+        ${block('Matériel nécessaire', fiche.Materiel_necessaire)}
+      </div>
+      <div style="margin-top:12px">
+        <h3>Champs de pratique</h3>
+        ${renderPills(champs)}
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Compétences associées</h3>
+      <div class="value">${compets.length ? compets.map(c=>`• ${escapeHtml([c.famille, c.code, c.intitule].filter(Boolean).join(' — '))}`).join('<br>') : '<span class="small">Aucune compétence sélectionnée.</span>'}</div>
+    </div>
+
+    <div class="section">
+      <h3>Références associées</h3>
+      <div class="value">${refs.length ? refs.map(r=>{
+        const head = [r.artiste, r.titre].filter(Boolean).join(' — ') || r.id;
+        const line2 = [r.domaine, r.date, r.questionnement].filter(Boolean).join(' • ');
+        const ana = r.analyse ? '<br><span class="small">'+escapeHtml(r.analyse)+'</span>' : '';
+        return `• <b>${escapeHtml(head)}</b>${line2 ? '<br><span class="small">'+escapeHtml(line2)+'</span>' : ''}${ana}`;
+      }).join('<br><br>') : '<span class="small">Aucune référence sélectionnée.</span>'}</div>
+    </div>
+
+    <div class="section">
+      <h3>Évaluation et parcours</h3>
+      <div class="detailGrid">
+        <div><h3>Types d’évaluation</h3>${renderPills(evaluations)}</div>
+        <div><h3>Parcours</h3>${renderPills(parcours)}</div>
+        ${block('Commentaire évaluation', fiche.Commentaire_evaluation)}
+        ${block('Liens interdisciplinaires', fiche.Liens_interdisciplinaires)}
+        ${block('Usage numérique pédagogique', fiche.Usage_numerique_pedagogique)}
+        ${block('Usage numérique artistique', fiche.Usage_numerique_artistique)}
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Prolongements et bilan</h3>
+      <div class="detailGrid">
+        ${block('Ouverture autre séquence', fiche.Ouverture_autre_sequence)}
+        ${block('Bilan', fiche.Bilan)}
+        ${block('Remarques enseignant', fiche.Remarques_enseignant)}
+      </div>
+    </div>
+  `;
+}
+
+
+function persistCreationUrl(){
+  const url = normalize(byId('creationAppUrl').value);
+  if(url){
+    localStorage.setItem(CREATION_URL_KEY, url);
+    setStatus('Lien de l’app de création mémorisé.');
+  } else {
+    localStorage.removeItem(CREATION_URL_KEY);
+    setStatus('Lien de l’app de création effacé.');
+  }
+}
+
+function loadSavedCreationUrl(){
+  const saved = localStorage.getItem(CREATION_URL_KEY) || '';
+  byId('creationAppUrl').value = saved;
+  rememberReservoirUrl();
+}
+
+function launchEdit(){
+  if(!currentId){
+    setStatus('Ouvrez d’abord une fiche à éditer.');
+    return;
+  }
+  const payload = {
+    ficheId: currentId,
+    timestamp: new Date().toISOString(),
+    source: 'reservoir'
+  };
+  localStorage.setItem(EDIT_STORAGE_KEY, JSON.stringify(payload));
+  const baseUrl = normalize(byId('creationAppUrl').value) || localStorage.getItem(CREATION_URL_KEY) || '';
+  if(baseUrl){
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    const target = `${baseUrl}${sep}edit=${encodeURIComponent(currentId)}`;
+    window.open(target, '_blank');
+    setStatus(`Demande d’édition préparée pour ${currentId}. L’app de création a été ouverte.`);
+  } else {
+    setStatus(`Demande d’édition préparée pour ${currentId}. Ouvrez maintenant l’app de création sur le même navigateur.`);
+  }
+}
+
+function renderEmptyDetail(){
+  byId('detailTitle').textContent = 'Aucune fiche ouverte';
+  byId('detailBody').innerHTML = '<div class="empty">Aucune fiche ne correspond aux filtres actuels.</div>';
+  renderList();
+}
+
+function resetFilters(){
+  byId('searchInput').value='';
+  ['filterCycle','filterNiveau','filterAxe','filterNotion','filterStatut'].forEach(id=>byId(id).value='');
+  applyFilters();
+}
+
+byId('fileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  workbookName = file.name;
+  const buffer = await file.arrayBuffer();
+  parseWorkbook(buffer);
+  setStatus(`Classeur chargé : ${file.name}. ${fiches.length} fiche(s) trouvée(s).`);
+});
+
+['searchInput','filterCycle','filterNiveau','filterAxe','filterNotion','filterStatut'].forEach(id=>{
+  byId(id).addEventListener(id==='searchInput' ? 'input' : 'change', applyFilters);
+});
+
+rememberReservoirUrl();
+loadSavedCreationUrl();
+byId('saveCreationUrlBtn').addEventListener('click', persistCreationUrl);
+byId('editBtn').addEventListener('click', launchEdit);
+byId('editBtnTop').addEventListener('click', launchEdit);
+byId('resetBtn').addEventListener('click', resetFilters);
+byId('printBtn').addEventListener('click', ()=>window.print());
+byId('downloadBtn').addEventListener('click', ()=>{
+  if(!workbook){ setStatus('Aucun classeur chargé.'); return; }
+  XLSX.writeFile(workbook, workbookName.replace(/\.xlsx?$/i,'') + '_copie.xlsx');
+  setStatus('Téléchargement du classeur chargé lancé.');
+});
+</script>
+</body>
+</html>

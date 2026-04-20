@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tableau de bord — Outils fiches de cours</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --line:#d9deea; --ink:#1d2433; --muted:#66738a;
+    --accent:#2e5bff; --accent2:#111827;
+    --c1:#ef6c00; --c2:#6a1b9a; --c3:#f9a825; --c4:#d32f2f; --c5:#1565c0; --c6:#2e7d32;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:22px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  h1{margin:0 0 6px;font-size:28px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{max-width:1300px;margin:0 auto;padding:18px}
+  .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+  .card h2{margin:0 0 12px;font-size:20px}
+  .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-bottom:10px}
+  .stack{display:grid;gap:12px}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,button,textarea,select{font:inherit}
+  input,textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:12px;background:#fff}
+  button{padding:12px 14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  button.dark{background:var(--accent2)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .app-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .app{border:1px solid var(--line);border-radius:18px;background:#fff;padding:15px}
+  .app h3{margin:0 0 8px;font-size:18px}
+  .app p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.35}
+  .pill{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:10px;color:#fff}
+  .p-orange{background:var(--c1)} .p-violet{background:var(--c2)} .p-jaune{background:var(--c3);color:#3b2a00}
+  .p-rouge{background:var(--c4)} .p-bleu{background:var(--c5)} .p-vert{background:var(--c6)}
+  .axes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .axe{padding:10px 12px;border-radius:14px;color:#fff;font-weight:700;font-size:14px}
+  .muted{color:var(--muted)}
+  .mini{font-size:12px}
+  .status{padding:10px 12px;border-radius:12px;background:#eef3ff;border:1px solid #d9e3ff;color:#2847a1;min-height:44px}
+  .notes textarea{min-height:150px}
+  .footer{margin-top:18px;color:var(--muted);font-size:13px}
+  @media (max-width: 980px){
+    .grid{grid-template-columns:1fr}
+    .app-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tableau de bord — Outils fiches de cours</h1>
+  <div class="sub">Point d’entrée unique pour ouvrir les apps, retrouver les liens et garder quelques repères de travail.</div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <section class="stack">
+      <div class="card">
+        <h2>Ouverture rapide</h2>
+        <div class="app-grid">
+          <div class="app">
+            <div class="pill p-bleu">Fiches</div>
+            <h3>App fusionnée</h3>
+            <p>Créer, ouvrir, modifier et enregistrer les fiches dans une seule interface.</p>
+            <label for="urlFusion">Lien de l’app</label>
+            <input id="urlFusion" placeholder="Collez ici le lien de l’app fusionnée">
+            <div class="row" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+              <button onclick="saveUrl('fusion')">Mémoriser</button>
+              <button class="secondary" onclick="openUrl('fusion')">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="app">
+            <div class="pill p-vert">Réserve</div>
+            <h3>Réservoir</h3>
+            <p>Consulter rapidement les fiches, filtrer et parcourir le contenu si tu gardes cette app à part.</p>
+            <label for="urlReservoir">Lien de l’app</label>
+            <input id="urlReservoir" placeholder="Collez ici le lien du réservoir">
+            <div class="row" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+              <button onclick="saveUrl('reservoir')">Mémoriser</button>
+              <button class="secondary" onclick="openUrl('reservoir')">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="app">
+            <div class="pill p-rouge">Création</div>
+            <h3>App création</h3>
+            <p>Version séparée pour créer ou reprendre des fiches si tu veux garder ce circuit disponible.</p>
+            <label for="urlCreation">Lien de l’app</label>
+            <input id="urlCreation" placeholder="Collez ici le lien de l’app création">
+            <div class="row" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+              <button onclick="saveUrl('creation')">Mémoriser</button>
+              <button class="secondary" onclick="openUrl('creation')">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="app">
+            <div class="pill p-violet">Données</div>
+            <h3>Classeur noyau</h3>
+            <p>Garde ici le lien du fichier Excel de base pour l’avoir toujours sous la main.</p>
+            <label for="urlExcel">Lien du classeur</label>
+            <input id="urlExcel" placeholder="Collez ici le lien du classeur Excel">
+            <div class="row" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+              <button onclick="saveUrl('excel')">Mémoriser</button>
+              <button class="secondary" onclick="openUrl('excel')">Ouvrir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Couleurs des axes</h2>
+        <div class="axes">
+          <div class="axe" style="background:var(--c4)">Cycle 4 — Représentation</div>
+          <div class="axe" style="background:var(--c5)">Cycle 4 — Matérialité</div>
+          <div class="axe" style="background:var(--c6)">Cycle 4 — Espace / auteur / spectateur</div>
+          <div class="axe" style="background:var(--c1)">Cycle 3 — Représentation</div>
+          <div class="axe" style="background:var(--c2)">Cycle 3 — Fabrications / objet / espace</div>
+          <div class="axe" style="background:var(--c3); color:#3b2a00;">Cycle 3 — Matérialité</div>
+        </div>
+      </div>
+
+      <div class="card notes">
+        <h2>Repères rapides</h2>
+        <label for="notes">Notes de travail</label>
+        <textarea id="notes" placeholder="Tu peux noter ici une idée, une correction à faire, une évolution d’app, etc."></textarea>
+        <div class="row" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+          <button class="dark" onclick="saveNotes()">Enregistrer les notes</button>
+          <button class="secondary" onclick="clearNotes()">Effacer</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="stack">
+      <div class="card">
+        <h2>État des liens</h2>
+        <div id="status" class="status">Renseigne les liens une fois, puis ouvre tes outils depuis ici.</div>
+      </div>
+
+      <div class="card">
+        <h2>Mode d’emploi très court</h2>
+        <div class="stack mini">
+          <div><b>1.</b> Colle les liens de tes apps et du classeur.</div>
+          <div><b>2.</b> Clique sur <b>Mémoriser</b>.</div>
+          <div><b>3.</b> Ouvre ensuite tes outils depuis ce tableau de bord.</div>
+          <div><b>4.</b> Garde ce fichier comme page d’accueil de ton système.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Ce tableau de bord sert à quoi ?</h2>
+        <div class="stack mini">
+          <div>• centraliser les liens</div>
+          <div>• éviter de chercher les fichiers</div>
+          <div>• garder une cohérence visuelle</div>
+          <div>• préparer l’arrivée d’autres apps plus tard</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Suite possible</h2>
+        <div class="stack mini">
+          <div>• ajouter des tuiles vers d’autres apps</div>
+          <div>• afficher le dernier fichier utilisé</div>
+          <div>• faire une page d’accueil encore plus graphique</div>
+          <div>• ajouter des raccourcis “cours”, “évaluation”, “suivi”</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="footer">Les liens et les notes sont mémorisés dans le navigateur de l’appareil.</div>
+</div>
+
+<script>
+const KEYS = {
+  fusion:'dashboard_url_fusion',
+  reservoir:'dashboard_url_reservoir',
+  creation:'dashboard_url_creation',
+  excel:'dashboard_url_excel',
+  notes:'dashboard_notes'
+};
+
+function setStatus(msg){
+  document.getElementById('status').textContent = msg;
+}
+
+function saveUrl(type){
+  const map = {
+    fusion:'urlFusion',
+    reservoir:'urlReservoir',
+    creation:'urlCreation',
+    excel:'urlExcel'
+  };
+  const input = document.getElementById(map[type]);
+  const value = (input.value || '').trim();
+  if(!value){
+    setStatus("Aucun lien à mémoriser.");
+    return;
+  }
+  localStorage.setItem(KEYS[type], value);
+  setStatus("Lien mémorisé : " + value);
+}
+
+function openUrl(type){
+  const url = localStorage.getItem(KEYS[type]) || '';
+  if(!url){
+    setStatus("Aucun lien mémorisé pour cet outil.");
+    return;
+  }
+  window.open(url, '_blank');
+}
+
+function saveNotes(){
+  localStorage.setItem(KEYS.notes, document.getElementById('notes').value || '');
+  setStatus("Notes enregistrées sur cet appareil.");
+}
+
+function clearNotes(){
+  document.getElementById('notes').value = '';
+  localStorage.removeItem(KEYS.notes);
+  setStatus("Notes effacées.");
+}
+
+function restore(){
+  document.getElementById('urlFusion').value = localStorage.getItem(KEYS.fusion) || '';
+  document.getElementById('urlReservoir').value = localStorage.getItem(KEYS.reservoir) || '';
+  document.getElementById('urlCreation').value = localStorage.getItem(KEYS.creation) || '';
+  document.getElementById('urlExcel').value = localStorage.getItem(KEYS.excel) || '';
+  document.getElementById('notes').value = localStorage.getItem(KEYS.notes) || '';
+}
+restore();
+</script>
+</body>
+</html>

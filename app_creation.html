@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Création de fiche de cours</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d9e0ea;
+      --text: #243041;
+      --muted: #637289;
+      --accent: #265d96;
+      --accent-2: #eef4fb;
+      --ok: #2f855a;
+      --warn: #a65d17;
+      --danger: #b83232;
+      --shadow: 0 8px 24px rgba(25, 35, 55, 0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 18px 22px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button, .button-label {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    button.secondary {
+      background: var(--accent-2);
+      border-color: #cfe0f4;
+    }
+    button.danger {
+      color: var(--danger);
+    }
+    input[type=file] { display: none; }
+    .app {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel h2 {
+      font-size: 17px;
+      margin: 0 0 12px 0;
+    }
+    .panel-inner { padding: 18px; }
+    .left-col { position: sticky; top: 92px; }
+    .status-box {
+      padding: 12px;
+      border: 1px dashed #b8c6d8;
+      border-radius: 12px;
+      background: #f8fbff;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    .list-toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+    .list-toolbar input {
+      flex: 1;
+      min-width: 0;
+    }
+    .fiche-list {
+      display: grid;
+      gap: 10px;
+      max-height: calc(100vh - 250px);
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .fiche-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      background: white;
+    }
+    .fiche-item.active {
+      border-color: var(--accent);
+      background: #f3f8ff;
+    }
+    .fiche-item-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .fiche-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: var(--text);
+    }
+    .field textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    .section:first-of-type {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f5f8fc;
+      border: 1px solid #d8e2ef;
+      font-size: 13px;
+    }
+    .chip button {
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+    .picker-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .picker-row select { min-width: 180px; }
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .inline-checks {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 4px;
+    }
+    .inline-checks label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text);
+      font-weight: normal;
+    }
+    .muted-box {
+      padding: 12px;
+      background: #fafcff;
+      border: 1px dashed #cfdae8;
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .small-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .footer-actions {
+      position: sticky;
+      bottom: 0;
+      padding-top: 12px;
+      margin-top: 20px;
+      background: linear-gradient(to bottom, rgba(245,247,251,0), rgba(245,247,251,1) 20px);
+    }
+    .footer-actions .inner {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+    .competence-list {
+      display: grid;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fcfdff;
+    }
+    .competence-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px;
+      background: white;
+    }
+    .competence-item label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--text);
+      font-weight: normal;
+    }
+    .competence-code {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .msg {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .left-col { position: static; }
+      .fiche-list { max-height: 300px; }
+    }
+    @media (max-width: 760px) {
+      .span-2,.span-3,.span-4,.span-6,.span-8,.span-12 { grid-column: span 12; }
+      .header-row { align-items: flex-start; }
+      .footer-actions .inner { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Création de fiche de cours</h1>
+        <div class="sub">Formulaire central alimentant le classeur maître des fiches de cours.</div>
+      </div>
+      <div class="top-actions">
+        <label class="button-label" for="excelFile">Charger le classeur Excel</label>
+        <input id="excelFile" type="file" accept=".xlsx,.xlsm,.xls" />
+        <button id="reuseLastBtn" class="secondary">Reprendre le dernier fichier utilisé</button>
+        <button id="downloadBtn" class="primary" disabled>Télécharger le classeur mis à jour</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app">
+    <aside class="left-col panel">
+      <div class="panel-inner">
+        <div class="status-box" id="statusBox">Aucun classeur chargé. Chargez le fichier Excel noyau pour commencer.</div>
+
+        <div class="list-toolbar">
+          <input id="searchFiche" type="text" placeholder="Chercher une fiche" />
+          <button id="newFicheBtn">Nouvelle</button>
+        </div>
+        <div class="small-actions">
+          <button id="duplicateBtn">Dupliquer</button>
+          <button id="deleteBtn" class="danger">Supprimer</button>
+        </div>
+        <div class="fiche-list" id="ficheList"></div>
+      </div>
+    </aside>
+
+    <main class="panel">
+      <div class="panel-inner">
+        <h2>Fiche de cours</h2>
+        <div class="msg" id="currentFicheMsg">Aucune fiche sélectionnée.</div>
+
+        <div class="section">
+          <div class="section-title">Identité</div>
+          <div class="form-grid" id="identityGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Ancrage programme</div>
+          <div class="form-grid" id="programGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Notions et vocabulaire</div>
+          <div class="form-grid" id="notionsGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Objectifs et évaluation</div>
+          <div class="form-grid" id="objectifsGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Dispositif pédagogique</div>
+          <div class="form-grid" id="dispositifGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Conditions et ouverture</div>
+          <div class="form-grid" id="conditionsGrid"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Compétences reliées à la fiche</div>
+          <div class="picker-row">
+            <select id="competenceFamilyFilter"></select>
+            <button id="selectAllVisibleCompetencesBtn" type="button">Ajouter toutes les compétences visibles</button>
+            <button id="clearCompetencesBtn" type="button">Effacer la sélection</button>
+          </div>
+          <div class="helper">Les compétences sont lues dans l’onglet <strong>Competences</strong> et enregistrées dans <strong>Fiche_Competences</strong>.</div>
+          <div class="competence-list" id="competenceList"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Références liées</div>
+          <div class="picker-row">
+            <select id="referenceSelect"></select>
+            <select id="referenceTypeSelect"></select>
+            <button id="addReferenceBtn" type="button">Ajouter la référence</button>
+          </div>
+          <div class="chips" id="referenceChips"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Séances</div>
+          <div class="muted-box">Version 1 : cette app enregistre la fiche et ses compétences. Les lignes de <strong>Fiche_Seances</strong> pourront être enrichies dans une étape suivante.</div>
+        </div>
+
+        <div class="footer-actions">
+          <div class="inner">
+            <div class="msg">Enregistrez d’abord les modifications dans l’app, puis téléchargez le classeur mis à jour.</div>
+            <div class="top-actions">
+              <button id="saveBtn" class="primary" disabled>Enregistrer la fiche dans le classeur</button>
+              <button id="resetBtn" disabled>Réinitialiser le formulaire</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SHEETS = {
+      fiches: 'Fiches_de_cours',
+      fichesCompetences: 'Fiche_Competences',
+      fichesReferences: 'Fiche_References',
+      competences: 'Competences',
+      oeuvres: 'Oeuvres',
+      listes: 'Listes'
+    };
+
+    const fieldSections = {
+      identityGrid: [
+        ['ID_fiche', 'text', 'span-3'],
+        ['Titre_fiche', 'text', 'span-6'],
+        ['Numero_sequence', 'text', 'span-3'],
+        ['Annee_scolaire', 'text', 'span-3'],
+        ['Cycle', 'select:Cycles', 'span-3'],
+        ['Niveau', 'select:Niveaux', 'span-3'],
+        ['Classe_cible', 'text', 'span-3'],
+        ['Statut_fiche', 'select:Statuts de fiche', 'span-3']
+      ],
+      programGrid: [
+        ['Axe_programme', 'select:Axes/Entrées programme', 'span-6'],
+        ['Entree_programme', 'text', 'span-6'],
+        ['Questionnement_principal', 'select:Questionnements', 'span-6'],
+        ['Questionnement_secondaire_1', 'select:Questionnements', 'span-6'],
+        ['Questionnement_secondaire_2', 'select:Questionnements', 'span-6'],
+        ['Questionnement_secondaire_3', 'select:Questionnements', 'span-6']
+      ],
+      notionsGrid: [
+        ['Notion_1', 'select:Notions', 'span-3'],
+        ['Notion_2', 'select:Notions', 'span-3'],
+        ['Notion_3', 'select:Notions', 'span-3'],
+        ['Notion_4', 'select:Notions', 'span-3'],
+        ['Vocabulaire_1', 'text', 'span-4'],
+        ['Vocabulaire_2', 'text', 'span-4'],
+        ['Vocabulaire_3', 'text', 'span-4'],
+        ['Vocabulaire_4', 'text', 'span-4'],
+        ['Vocabulaire_5', 'text', 'span-4'],
+        ['Vocabulaire_complementaire', 'textarea', 'span-12']
+      ],
+      objectifsGrid: [
+        ['Objectif_1', 'textarea', 'span-6'],
+        ['Objectif_2', 'textarea', 'span-6'],
+        ['Objectif_3', 'textarea', 'span-6'],
+        ['Objectif_4', 'textarea', 'span-6'],
+        ['Commentaire_evaluation', 'textarea', 'span-12'],
+        ['Evaluation_formative', 'checkbox', 'span-3'],
+        ['Evaluation_formative_pairs', 'checkbox', 'span-3'],
+        ['Evaluation_sommative', 'checkbox', 'span-3'],
+        ['Evaluation_certificative', 'checkbox', 'span-3']
+      ],
+      dispositifGrid: [
+        ['Sujet_demande_incitation', 'textarea', 'span-12'],
+        ['Consigne_principale', 'textarea', 'span-12'],
+        ['Contrainte_principale', 'textarea', 'span-6'],
+        ['Contrainte_secondaire', 'textarea', 'span-6'],
+        ['Champ_pratique_1', 'select:Champs de pratique', 'span-4'],
+        ['Champ_pratique_2', 'select:Champs de pratique', 'span-4'],
+        ['Champ_pratique_3', 'select:Champs de pratique', 'span-4']
+      ],
+      conditionsGrid: [
+        ['Duree_totale_sequence', 'text', 'span-3'],
+        ['Nombre_seances', 'number', 'span-3'],
+        ['Conditions_temporelles_resume', 'textarea', 'span-6'],
+        ['Conditions_materielles', 'textarea', 'span-6'],
+        ['Materiel_necessaire', 'textarea', 'span-6'],
+        ['Travail_individuel_ou_groupe', 'text', 'span-6'],
+        ['Usage_numerique_pedagogique', 'textarea', 'span-6'],
+        ['Usage_numerique_artistique', 'textarea', 'span-6'],
+        ['Liens_interdisciplinaires', 'textarea', 'span-6'],
+        ['Parcours_citoyen', 'checkbox', 'span-2'],
+        ['Parcours_sante', 'checkbox', 'span-2'],
+        ['Parcours_avenir', 'checkbox', 'span-2'],
+        ['Parcours_artistique_culturel', 'checkbox', 'span-3'],
+        ['Ouverture_autre_sequence', 'textarea', 'span-12'],
+        ['Bilan', 'textarea', 'span-12'],
+        ['Remarques_enseignant', 'textarea', 'span-12']
+      ]
+    };
+
+    const appState = {
+      workbook: null,
+      sourceFileName: '',
+      data: {},
+      headers: {},
+      listMap: {},
+      currentIndex: -1,
+      draft: null,
+      selectedCompetenceCodes: new Set(),
+      selectedReferenceIds: [],
+      loadedFromCache: false
+    };
+
+    const els = {
+      excelFile: document.getElementById('excelFile'),
+      reuseLastBtn: document.getElementById('reuseLastBtn'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      saveBtn: document.getElementById('saveBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      newFicheBtn: document.getElementById('newFicheBtn'),
+      duplicateBtn: document.getElementById('duplicateBtn'),
+      deleteBtn: document.getElementById('deleteBtn'),
+      searchFiche: document.getElementById('searchFiche'),
+      ficheList: document.getElementById('ficheList'),
+      statusBox: document.getElementById('statusBox'),
+      currentFicheMsg: document.getElementById('currentFicheMsg'),
+      competenceList: document.getElementById('competenceList'),
+      competenceFamilyFilter: document.getElementById('competenceFamilyFilter'),
+      selectAllVisibleCompetencesBtn: document.getElementById('selectAllVisibleCompetencesBtn'),
+      clearCompetencesBtn: document.getElementById('clearCompetencesBtn'),
+      referenceSelect: document.getElementById('referenceSelect'),
+      referenceTypeSelect: document.getElementById('referenceTypeSelect'),
+      addReferenceBtn: document.getElementById('addReferenceBtn'),
+      referenceChips: document.getElementById('referenceChips')
+    };
+
+    const formInputs = {};
+
+    function normaliseBoolean(value) {
+      return String(value || '').toLowerCase() === 'oui' || value === true;
+    }
+
+    function yesNo(value) {
+      return value ? 'Oui' : 'Non';
+    }
+
+    function aoaFromSheet(sheet) {
+      return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    }
+
+    function objectsFromSheet(sheet) {
+      return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    }
+
+    function readWorkbook(arrayBuffer, sourceFileName = 'classeur.xlsx') {
+      const wb = XLSX.read(arrayBuffer, { type: 'array' });
+      appState.workbook = wb;
+      appState.sourceFileName = sourceFileName;
+      appState.data = {};
+      appState.headers = {};
+
+      for (const name of Object.values(SHEETS)) {
+        const sheet = wb.Sheets[name];
+        if (!sheet) continue;
+        appState.data[name] = objectsFromSheet(sheet).filter(row => Object.values(row).some(v => String(v).trim() !== ''));
+        appState.headers[name] = aoaFromSheet(sheet)[0] || [];
+      }
+
+      buildListMap();
+      fillReferenceTypeSelect();
+      fillCompetenceFamilyFilter();
+      renderFicheList();
+      createBlankDraft();
+      renderDraftToForm();
+      renderCompetences();
+      renderReferenceSelect();
+      refreshStatus();
+      els.downloadBtn.disabled = false;
+      els.saveBtn.disabled = false;
+      els.resetBtn.disabled = false;
+    }
+
+    function buildListMap() {
+      const rows = aoaFromSheet(appState.workbook.Sheets[SHEETS.listes] || {});
+      appState.listMap = {};
+      if (!rows.length) return;
+      const headers = rows[0];
+      headers.forEach((header, colIndex) => {
+        if (!header) return;
+        const values = [];
+        for (let r = 1; r < rows.length; r++) {
+          const value = rows[r]?.[colIndex];
+          if (value !== undefined && value !== null && String(value).trim() !== '') values.push(String(value).trim());
+        }
+        appState.listMap[header] = values;
+      });
+    }
+
+    function fillReferenceTypeSelect() {
+      const values = ['Arts plastiques', 'Histoire des arts', 'Ouverture'];
+      els.referenceTypeSelect.innerHTML = values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    }
+
+    function fillCompetenceFamilyFilter() {
+      const competences = appState.data[SHEETS.competences] || [];
+      const families = [...new Set(competences.map(c => c.Famille_competence).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b), 'fr'));
+      const options = ['<option value="">Toutes les familles</option>'].concat(families.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`));
+      els.competenceFamilyFilter.innerHTML = options.join('');
+    }
+
+    function makeField(containerId, fieldName, typeSpec, spanClass) {
+      const grid = document.getElementById(containerId);
+      const wrap = document.createElement('div');
+      wrap.className = `field ${spanClass}`;
+      const label = document.createElement('label');
+      label.textContent = prettify(fieldName);
+      label.htmlFor = fieldName;
+      wrap.appendChild(label);
+      let input;
+
+      if (typeSpec.startsWith('select:')) {
+        input = document.createElement('select');
+        const listName = typeSpec.split(':')[1];
+        populateSelect(input, listName);
+      } else if (typeSpec === 'textarea') {
+        input = document.createElement('textarea');
+      } else if (typeSpec === 'checkbox') {
+        const boxWrap = document.createElement('div');
+        boxWrap.className = 'inline-checks';
+        input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = fieldName;
+        const boxLabel = document.createElement('label');
+        boxLabel.appendChild(input);
+        boxLabel.appendChild(document.createTextNode('Oui'));
+        boxWrap.appendChild(boxLabel);
+        wrap.appendChild(boxWrap);
+        formInputs[fieldName] = input;
+        input.addEventListener('change', syncDraftFromForm);
+        grid.appendChild(wrap);
+        return;
+      } else {
+        input = document.createElement('input');
+        input.type = typeSpec === 'number' ? 'number' : 'text';
+      }
+
+      input.id = fieldName;
+      input.dataset.field = fieldName;
+      wrap.appendChild(input);
+      grid.appendChild(wrap);
+      formInputs[fieldName] = input;
+      input.addEventListener('input', syncDraftFromForm);
+      input.addEventListener('change', e => {
+        if (fieldName === 'Cycle') {
+          syncDraftFromForm();
+          renderCompetences();
+        } else {
+          syncDraftFromForm();
+        }
+      });
+    }
+
+    function populateSelect(select, listName) {
+      const options = appState.listMap[listName] || [];
+      select.innerHTML = ['<option value=""></option>'].concat(options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)).join('');
+    }
+
+    function initForm() {
+      Object.entries(fieldSections).forEach(([containerId, defs]) => {
+        const grid = document.getElementById(containerId);
+        grid.innerHTML = '';
+        defs.forEach(([fieldName, typeSpec, spanClass]) => makeField(containerId, fieldName, typeSpec, spanClass));
+      });
+    }
+
+    function prettify(key) {
+      return key.replaceAll('_', ' ').replace(/\b([a-z])/g, m => m.toUpperCase());
+    }
+
+    function refreshStatus() {
+      const nbFiches = (appState.data[SHEETS.fiches] || []).length;
+      const nbComp = (appState.data[SHEETS.competences] || []).length;
+      const nbRefs = (appState.data[SHEETS.oeuvres] || []).length;
+      let text = `Classeur chargé : <strong>${escapeHtml(appState.sourceFileName || '—')}</strong><br>`;
+      text += `${nbFiches} fiche(s), ${nbComp} compétence(s), ${nbRefs} œuvre(s).`;
+      if (appState.loadedFromCache) text += '<br>Session restaurée depuis le navigateur.';
+      els.statusBox.innerHTML = text;
+    }
+
+    function renderFicheList() {
+      const fiches = appState.data[SHEETS.fiches] || [];
+      const search = (els.searchFiche.value || '').trim().toLowerCase();
+      const filtered = fiches.map((fiche, index) => ({ fiche, index })).filter(({ fiche }) => {
+        if (!search) return true;
+        const text = [fiche.ID_fiche, fiche.Titre_fiche, fiche.Niveau, fiche.Questionnement_principal].join(' ').toLowerCase();
+        return text.includes(search);
+      });
+
+      if (!filtered.length) {
+        els.ficheList.innerHTML = '<div class="muted-box">Aucune fiche visible.</div>';
+        return;
+      }
+
+      els.ficheList.innerHTML = filtered.map(({ fiche, index }) => `
+        <div class="fiche-item ${index === appState.currentIndex ? 'active' : ''}" data-index="${index}">
+          <div class="fiche-item-title">${escapeHtml(fiche.Titre_fiche || fiche.ID_fiche || 'Sans titre')}</div>
+          <div class="fiche-meta">${escapeHtml(fiche.ID_fiche || '')}<br>${escapeHtml([fiche.Cycle, fiche.Niveau].filter(Boolean).join(' · '))}<br>${escapeHtml(fiche.Questionnement_principal || '')}</div>
+        </div>
+      `).join('');
+
+      els.ficheList.querySelectorAll('.fiche-item').forEach(item => {
+        item.addEventListener('click', () => loadFicheAtIndex(Number(item.dataset.index)));
+      });
+    }
+
+    function createBlankDraft() {
+      const headers = (appState.headers[SHEETS.fiches] || []).filter(Boolean);
+      const draft = {};
+      headers.forEach(h => { draft[h] = ''; });
+      draft.ID_fiche = nextId('FICHE_', appState.data[SHEETS.fiches], 'ID_fiche', 4);
+      draft.Statut_fiche = 'Brouillon';
+      appState.currentIndex = -1;
+      appState.draft = draft;
+      appState.selectedCompetenceCodes = new Set();
+      appState.selectedReferenceIds = [];
+      updateCurrentFicheMsg();
+    }
+
+    function loadFicheAtIndex(index) {
+      const fiches = appState.data[SHEETS.fiches] || [];
+      const fiche = fiches[index];
+      if (!fiche) return;
+      appState.currentIndex = index;
+      appState.draft = { ...fiche };
+      const id = fiche.ID_fiche;
+      appState.selectedCompetenceCodes = new Set(
+        (appState.data[SHEETS.fichesCompetences] || [])
+          .filter(row => row.ID_fiche === id && yesNoToBool(row.Selectionnee))
+          .map(row => row.Code_competence)
+      );
+      appState.selectedReferenceIds = (appState.data[SHEETS.fichesReferences] || [])
+        .filter(row => row.ID_fiche === id)
+        .sort((a,b) => Number(a.Rang_affichage || 0) - Number(b.Rang_affichage || 0))
+        .map(row => ({
+          idOeuvre: row.ID_oeuvre,
+          type: row.Type_reference || 'Arts plastiques',
+          obligatoire: row.Reference_obligatoire || 'Non'
+        }));
+      renderDraftToForm();
+      renderCompetences();
+      renderReferenceChips();
+      renderFicheList();
+      updateCurrentFicheMsg();
+    }
+
+    function yesNoToBool(value) {
+      return String(value || '').toLowerCase() === 'oui';
+    }
+
+    function renderDraftToForm() {
+      if (!appState.draft) return;
+      Object.entries(formInputs).forEach(([field, input]) => {
+        if (input.type === 'checkbox') input.checked = yesNoToBool(appState.draft[field]);
+        else input.value = appState.draft[field] ?? '';
+      });
+      renderReferenceSelect();
+      renderReferenceChips();
+      updateCurrentFicheMsg();
+    }
+
+    function syncDraftFromForm() {
+      if (!appState.draft) return;
+      Object.entries(formInputs).forEach(([field, input]) => {
+        if (input.type === 'checkbox') appState.draft[field] = yesNo(input.checked);
+        else appState.draft[field] = input.value ?? '';
+      });
+      updateCurrentFicheMsg();
+    }
+
+    function updateCurrentFicheMsg() {
+      if (!appState.draft) {
+        els.currentFicheMsg.textContent = 'Aucune fiche sélectionnée.';
+        return;
+      }
+      const title = appState.draft.Titre_fiche || 'Fiche sans titre';
+      const id = appState.draft.ID_fiche || '';
+      const meta = [appState.draft.Cycle, appState.draft.Niveau, appState.draft.Questionnement_principal].filter(Boolean).join(' · ');
+      els.currentFicheMsg.textContent = `${id} — ${title}${meta ? ' — ' + meta : ''}`;
+    }
+
+    function renderCompetences() {
+      const competences = appState.data[SHEETS.competences] || [];
+      const cycle = appState.draft?.Cycle || '';
+      const family = els.competenceFamilyFilter.value || '';
+      const visible = competences.filter(comp => {
+        const okCycle = !cycle || !comp.Cycle || comp.Cycle === cycle;
+        const okFamily = !family || comp.Famille_competence === family;
+        return okCycle && okFamily;
+      });
+      if (!visible.length) {
+        els.competenceList.innerHTML = '<div class="muted-box">Aucune compétence visible pour ce filtre.</div>';
+        return;
+      }
+      els.competenceList.innerHTML = visible.map(comp => {
+        const checked = appState.selectedCompetenceCodes.has(comp.Code_competence) ? 'checked' : '';
+        return `
+          <div class="competence-item">
+            <label>
+              <input type="checkbox" data-code="${escapeHtml(comp.Code_competence)}" ${checked}>
+              <span>
+                <strong>${escapeHtml(comp.Intitule_competence || '')}</strong>
+                <div class="competence-code">${escapeHtml([comp.Code_competence, comp.Famille_competence, comp.Type_competence].filter(Boolean).join(' · '))}</div>
+              </span>
+            </label>
+          </div>
+        `;
+      }).join('');
+      els.competenceList.querySelectorAll('input[type="checkbox"]').forEach(box => {
+        box.addEventListener('change', () => {
+          const code = box.dataset.code;
+          if (box.checked) appState.selectedCompetenceCodes.add(code);
+          else appState.selectedCompetenceCodes.delete(code);
+        });
+      });
+    }
+
+    function renderReferenceSelect() {
+      const oeuvres = appState.data[SHEETS.oeuvres] || [];
+      const options = ['<option value="">Choisir une œuvre</option>'].concat(oeuvres.map(o => {
+        const label = [o.Artiste, o.Titre, o.Date].filter(Boolean).join(' — ');
+        return `<option value="${escapeHtml(o.ID_oeuvre)}">${escapeHtml(label || o.ID_oeuvre)}</option>`;
+      }));
+      els.referenceSelect.innerHTML = options.join('');
+    }
+
+    function renderReferenceChips() {
+      const oeuvres = appState.data[SHEETS.oeuvres] || [];
+      if (!appState.selectedReferenceIds.length) {
+        els.referenceChips.innerHTML = '<div class="muted-box">Aucune référence ajoutée.</div>';
+        return;
+      }
+      els.referenceChips.innerHTML = appState.selectedReferenceIds.map((ref, idx) => {
+        const oeuvre = oeuvres.find(o => o.ID_oeuvre === ref.idOeuvre) || {};
+        const label = [oeuvre.Artiste, oeuvre.Titre].filter(Boolean).join(' — ') || ref.idOeuvre;
+        return `<span class="chip">${escapeHtml(label)} <em>(${escapeHtml(ref.type)})</em> <button data-remove-ref="${idx}" type="button">×</button></span>`;
+      }).join('');
+      els.referenceChips.querySelectorAll('button[data-remove-ref]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.removeRef);
+          appState.selectedReferenceIds.splice(idx, 1);
+          renderReferenceChips();
+        });
+      });
+    }
+
+    function saveCurrentDraft() {
+      syncDraftFromForm();
+      if (!appState.draft?.ID_fiche) {
+        alert('La fiche doit avoir un ID_fiche.');
+        return;
+      }
+      const fiches = appState.data[SHEETS.fiches] || [];
+      if (appState.currentIndex >= 0) fiches[appState.currentIndex] = { ...appState.draft };
+      else {
+        fiches.unshift({ ...appState.draft });
+        appState.currentIndex = 0;
+      }
+      appState.data[SHEETS.fiches] = fiches;
+      saveCompetenceLinks(appState.draft.ID_fiche);
+      saveReferenceLinks(appState.draft.ID_fiche);
+      writeBackSheets();
+      persistLastWorkbook();
+      renderFicheList();
+      updateCurrentFicheMsg();
+      refreshStatus();
+      alert('La fiche a été enregistrée dans le classeur chargé.');
+    }
+
+    function saveCompetenceLinks(idFiche) {
+      const rows = (appState.data[SHEETS.fichesCompetences] || []).filter(r => r.ID_fiche !== idFiche);
+      const competences = appState.data[SHEETS.competences] || [];
+      [...appState.selectedCompetenceCodes].forEach(code => {
+        const comp = competences.find(c => c.Code_competence === code) || {};
+        rows.push({
+          ID_ligne_competence: nextId('COMP_', rows, 'ID_ligne_competence', 4),
+          ID_fiche: idFiche,
+          Type_competence: comp.Type_competence || '',
+          Famille_competence: comp.Famille_competence || '',
+          Code_competence: code,
+          Intitule_competence: comp.Intitule_competence || '',
+          Selectionnee: 'Oui',
+          Remarque: ''
+        });
+      });
+      appState.data[SHEETS.fichesCompetences] = rows;
+    }
+
+    function saveReferenceLinks(idFiche) {
+      const rows = (appState.data[SHEETS.fichesReferences] || []).filter(r => r.ID_fiche !== idFiche);
+      appState.selectedReferenceIds.forEach((ref, idx) => {
+        rows.push({
+          ID_ligne_reference: nextId('REFL_', rows, 'ID_ligne_reference', 4),
+          ID_fiche: idFiche,
+          ID_oeuvre: ref.idOeuvre,
+          Type_reference: ref.type,
+          Rang_affichage: idx + 1,
+          Reference_obligatoire: ref.obligatoire || 'Non',
+          Commentaire_reference: ''
+        });
+      });
+      appState.data[SHEETS.fichesReferences] = rows;
+    }
+
+    function writeBackSheets() {
+      const wb = appState.workbook;
+      Object.entries(appState.data).forEach(([sheetName, rows]) => {
+        if (![SHEETS.fiches, SHEETS.fichesCompetences, SHEETS.fichesReferences].includes(sheetName)) return;
+        const headers = (appState.headers[sheetName] || []).filter(Boolean);
+        const aoa = [headers];
+        rows.forEach(row => {
+          aoa.push(headers.map(h => row[h] ?? ''));
+        });
+        wb.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(aoa);
+      });
+    }
+
+    function nextId(prefix, rows, key, pad) {
+      const nums = (rows || [])
+        .map(r => String(r[key] || ''))
+        .map(v => {
+          const m = v.match(/(\d+)$/);
+          return m ? Number(m[1]) : 0;
+        });
+      const next = (nums.length ? Math.max(...nums) : 0) + 1;
+      return prefix + String(next).padStart(pad, '0');
+    }
+
+    function duplicateCurrentFiche() {
+      if (!appState.draft) return;
+      syncDraftFromForm();
+      const copy = { ...appState.draft };
+      copy.ID_fiche = nextId('FICHE_', appState.data[SHEETS.fiches], 'ID_fiche', 4);
+      copy.Titre_fiche = (copy.Titre_fiche || 'Copie') + ' (copie)';
+      appState.currentIndex = -1;
+      appState.draft = copy;
+      renderDraftToForm();
+      updateCurrentFicheMsg();
+    }
+
+    function deleteCurrentFiche() {
+      if (appState.currentIndex < 0) return;
+      if (!confirm('Supprimer cette fiche du classeur chargé ?')) return;
+      const fiche = appState.data[SHEETS.fiches][appState.currentIndex];
+      const id = fiche.ID_fiche;
+      appState.data[SHEETS.fiches].splice(appState.currentIndex, 1);
+      appState.data[SHEETS.fichesCompetences] = (appState.data[SHEETS.fichesCompetences] || []).filter(r => r.ID_fiche !== id);
+      appState.data[SHEETS.fichesReferences] = (appState.data[SHEETS.fichesReferences] || []).filter(r => r.ID_fiche !== id);
+      writeBackSheets();
+      persistLastWorkbook();
+      createBlankDraft();
+      renderDraftToForm();
+      renderFicheList();
+      refreshStatus();
+    }
+
+    function downloadWorkbook() {
+      writeBackSheets();
+      const filename = (appState.sourceFileName || 'classeur_noyau_fiche_de_cours.xlsx').replace(/\.xlsx$/i, '') + '_mis_a_jour.xlsx';
+      XLSX.writeFile(appState.workbook, filename);
+      persistLastWorkbook();
+    }
+
+    function persistLastWorkbook() {
+      try {
+        const binary = XLSX.write(appState.workbook, { type: 'base64', bookType: 'xlsx' });
+        localStorage.setItem('ficheCoursWorkbookBase64', binary);
+        localStorage.setItem('ficheCoursWorkbookName', appState.sourceFileName || 'classeur_noyau_fiche_de_cours.xlsx');
+      } catch (e) {
+        console.warn('Impossible de mémoriser le classeur localement.', e);
+      }
+    }
+
+    function restoreLastWorkbook() {
+      const b64 = localStorage.getItem('ficheCoursWorkbookBase64');
+      const name = localStorage.getItem('ficheCoursWorkbookName') || 'classeur_noyau_fiche_de_cours.xlsx';
+      if (!b64) {
+        alert('Aucun dernier fichier mémorisé dans le navigateur.');
+        return;
+      }
+      const wb = XLSX.read(b64, { type: 'base64' });
+      const array = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      appState.loadedFromCache = true;
+      readWorkbook(array, name);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function addSelectedReference() {
+      const idOeuvre = els.referenceSelect.value;
+      if (!idOeuvre) return;
+      if (appState.selectedReferenceIds.some(r => r.idOeuvre === idOeuvre)) return;
+      appState.selectedReferenceIds.push({
+        idOeuvre,
+        type: els.referenceTypeSelect.value || 'Arts plastiques',
+        obligatoire: 'Non'
+      });
+      renderReferenceChips();
+      els.referenceSelect.value = '';
+    }
+
+    els.excelFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const buffer = await file.arrayBuffer();
+      appState.loadedFromCache = false;
+      readWorkbook(buffer, file.name);
+    });
+
+    els.reuseLastBtn.addEventListener('click', restoreLastWorkbook);
+    els.searchFiche.addEventListener('input', renderFicheList);
+    els.newFicheBtn.addEventListener('click', () => {
+      createBlankDraft();
+      renderDraftToForm();
+      renderCompetences();
+      renderReferenceChips();
+      renderFicheList();
+    });
+    els.duplicateBtn.addEventListener('click', duplicateCurrentFiche);
+    els.deleteBtn.addEventListener('click', deleteCurrentFiche);
+    els.saveBtn.addEventListener('click', saveCurrentDraft);
+    els.downloadBtn.addEventListener('click', downloadWorkbook);
+    els.resetBtn.addEventListener('click', () => {
+      if (appState.currentIndex >= 0) loadFicheAtIndex(appState.currentIndex);
+      else {
+        createBlankDraft();
+        renderDraftToForm();
+        renderCompetences();
+        renderReferenceChips();
+      }
+    });
+    els.competenceFamilyFilter.addEventListener('change', renderCompetences);
+    els.selectAllVisibleCompetencesBtn.addEventListener('click', () => {
+      els.competenceList.querySelectorAll('input[type="checkbox"]').forEach(box => {
+        box.checked = true;
+        appState.selectedCompetenceCodes.add(box.dataset.code);
+      });
+    });
+    els.clearCompetencesBtn.addEventListener('click', () => {
+      appState.selectedCompetenceCodes.clear();
+      renderCompetences();
+    });
+    els.addReferenceBtn.addEventListener('click', addSelectedReference);
+
+    initForm();
+  </script>
+</body>
+</html>

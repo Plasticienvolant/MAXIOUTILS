@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fiches de cours — app fusionnée</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--line:#d9deea;--ink:#1d2433;--muted:#647089;--accent:#2e5bff;--soft:#eef3ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:16px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+h1{margin:0 0 4px 0;font-size:24px}.sub{font-size:14px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;max-width:1700px;margin:0 auto;padding:16px}
+.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.panel{padding:14px;position:sticky;top:90px;max-height:calc(100vh - 106px);overflow:auto}
+.main{min-width:0}
+.card{padding:16px;margin-bottom:14px}
+.status{padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid #d9e3ff;color:#2847a1;margin-bottom:12px;min-height:42px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select,textarea,button{font:inherit}
+input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #cfd6e4;background:#fff;min-height:46px}
+textarea{min-height:90px;resize:vertical}
+button{padding:12px 14px;border:none;border-radius:12px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;min-height:46px}
+button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button.warn{background:#1d2433}
+button.ghost{background:#f6f7fb;color:var(--ink);border:1px solid var(--line)}
+.grid,.grid2,.toolbar,.filters{display:grid;gap:12px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.toolbar{grid-template-columns:1.2fr 1fr auto auto auto;align-items:end}.filters{grid-template-columns:1fr 1fr}
+h2{margin:0 0 12px 0;font-size:19px}.muted{color:var(--muted)}
+.currentBadge{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--soft);border:1px solid #d9e3ff;font-size:13px;color:#2847a1}
+.hiddenStore{display:none}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfcff}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:0}.checks input{width:auto;min-height:auto;margin-top:2px}
+.groupBlock{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.groupTitle{font-size:13px;font-weight:700;margin:0 0 8px 0}
+.pillbox{display:flex;flex-wrap:wrap;gap:8px}.pill{background:var(--soft);border:1px solid #d9e3ff;padding:5px 9px;border-radius:999px;font-size:12px}
+.sidebarTools{display:grid;gap:12px;margin-bottom:12px}.sideList{display:grid;gap:10px}
+.ficheItem{border:1px solid var(--line);border-left:10px solid var(--line);border-radius:14px;background:#fff;padding:12px;cursor:pointer;text-align:left}
+.ficheItem:hover{border-color:#8ea3e8;background:#f9fbff;box-shadow:0 0 0 2px rgba(0,0,0,.04)}.ficheItem.active{border-color:#1d2433;box-shadow:0 0 0 2px rgba(29,36,51,.12)}
+.ficheItem.axe-c3-representation,.axeBadge.axe-c3-representation{border-left-color:#ef6c00}.ficheItem.axe-c3-fabrications,.axeBadge.axe-c3-fabrications{border-left-color:#6a1b9a}.ficheItem.axe-c3-materialite,.axeBadge.axe-c3-materialite{border-left-color:#f9a825}.ficheItem.axe-c4-representation,.axeBadge.axe-c4-representation{border-left-color:#d32f2f}.ficheItem.axe-c4-materialite,.axeBadge.axe-c4-materialite{border-left-color:#1565c0}.ficheItem.axe-c4-espace,.axeBadge.axe-c4-espace{border-left-color:#2e7d32}
+.ficheCode{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
+.ficheTitle{font-weight:700;font-size:15px;line-height:1.25;margin-bottom:8px;color:var(--ink)}
+.ficheMeta{font-size:12px;color:var(--muted);margin-bottom:6px}
+.axeBadge{display:inline-block;border-left:8px solid var(--line);background:#f8faff;border-radius:999px;padding:5px 10px 5px 8px;font-size:12px;color:#41506d;font-weight:700}
+.resultsHead{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.small{font-size:12px;color:var(--muted)}
+@media (max-width:1200px){.layout{grid-template-columns:320px 1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar{grid-template-columns:1fr 1fr auto auto auto}}
+@media (max-width:920px){body{font-size:17px}h1{font-size:28px}.layout{grid-template-columns:1fr}.panel{position:static;max-height:none}.grid,.grid2,.toolbar,.filters{grid-template-columns:1fr}.checks{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fiches de cours</h1>
+  <div class="sub">Une seule app pour consulter, créer, modifier et télécharger le classeur.</div>
+</header>
+<div class="layout">
+  <aside class="panel">
+    <div id="status" class="status">Chargez d’abord votre classeur noyau.</div>
+    <div class="sidebarTools">
+      <div>
+        <label>Classeur Excel</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      </div>
+      <div class="filters">
+        <div><label>Cycle</label><select id="filterCycle"><option value="">Tous</option></select></div>
+        <div><label>Niveau</label><select id="filterNiveau"><option value="">Tous</option></select></div>
+        <div><label>Axe</label><select id="filterAxe"><option value="">Tous</option></select></div>
+        <div><label>Notion</label><select id="filterNotion"><option value="">Toutes</option></select></div>
+      </div>
+      <div>
+        <label>Recherche</label>
+        <input id="searchInput" placeholder="Titre, consigne, questionnement..." />
+      </div>
+      <div class="grid2">
+        <button type="button" id="newBtn">Nouvelle fiche</button>
+        <button type="button" class="secondary" id="resetFiltersBtn">Réinitialiser filtres</button>
+      </div>
+    </div>
+    <div class="resultsHead">
+      <strong>Fiches</strong>
+      <span id="resultCount" class="small">0</span>
+    </div>
+    <div id="ficheList" class="sideList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <label>Fiche en cours</label>
+          <div id="currentFicheBadge" class="currentBadge">Aucune fiche ouverte</div>
+        </div>
+        <div>
+          <label>ID fiche</label>
+          <input id="ID_fiche" placeholder="Généré automatiquement" />
+        </div>
+        <button type="button" id="saveBtn">Enregistrer</button>
+        <button type="button" class="warn" id="downloadBtn">Télécharger le classeur</button>
+        <button type="button" class="ghost" id="scrollTopBtn">Haut de page</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1. Identité</h2>
+      <div class="grid">
+        <div><label>Titre de la fiche</label><input id="Titre_fiche"></div>
+        <div><label>Cycle</label><select id="Cycle"></select></div>
+        <div><label>Niveau</label><select id="Niveau"></select></div>
+        <div><label>Classe cible</label><input id="Classe_cible"></div>
+        <div><label>Travail individuel ou en groupe</label><select id="Travail_individuel_ou_groupe"></select></div>
+      </div>
+      <div class="hiddenStore"><input id="Numero_sequence"><input id="Annee_scolaire"><select id="Statut_fiche"></select></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Programme</h2>
+      <div class="grid">
+        <div><label>Axe du programme</label><select id="Axe_programme"></select></div>
+        <div><label>Questionnement principal</label><select id="Questionnement_principal"></select></div>
+        <div><label>Questionnement secondaire 1</label><select id="Questionnement_secondaire_1"></select></div>
+        <div><label>Questionnement secondaire 2</label><select id="Questionnement_secondaire_2"></select></div>
+        <div><label>Questionnement secondaire 3</label><select id="Questionnement_secondaire_3"></select></div>
+        <div><label>Notion 1</label><select id="Notion_1"></select></div>
+        <div><label>Notion 2</label><select id="Notion_2"></select></div>
+        <div><label>Notion 3</label><select id="Notion_3"></select></div>
+        <div><label>Notion 4</label><select id="Notion_4"></select></div>
+      </div>
+      <div class="hiddenStore"><input id="Entree_programme"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Objectifs et vocabulaire</h2>
+      <div class="grid2">
+        <div><label>Objectif 1</label><textarea id="Objectif_1"></textarea></div>
+        <div><label>Objectif 2</label><textarea id="Objectif_2"></textarea></div>
+        <div><label>Objectif 3</label><textarea id="Objectif_3"></textarea></div>
+        <div><label>Objectif 4</label><textarea id="Objectif_4"></textarea></div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Vocabulaire</label>
+        <textarea id="Vocabulaire_global" placeholder="Un terme par ligne ou séparés par des virgules"></textarea>
+      </div>
+      <div class="hiddenStore"><input id="Vocabulaire_1"><input id="Vocabulaire_2"><input id="Vocabulaire_3"><input id="Vocabulaire_4"><input id="Vocabulaire_5"><input id="Vocabulaire_complementaire"></div>
+    </div>
+
+    <div class="card">
+      <h2>4. Dispositif pédagogique</h2>
+      <div class="grid2">
+        <div><label>Sujet / demande / incitation</label><textarea id="Sujet_demande_incitation"></textarea></div>
+        <div><label>Consigne principale</label><textarea id="Consigne_principale"></textarea></div>
+        <div><label>Contrainte principale</label><textarea id="Contrainte_principale"></textarea></div>
+        <div><label>Contrainte secondaire</label><textarea id="Contrainte_secondaire"></textarea></div>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Champ pratique 1</label><select id="Champ_pratique_1"></select></div>
+        <div><label>Champ pratique 2</label><select id="Champ_pratique_2"></select></div>
+        <div><label>Champ pratique 3</label><select id="Champ_pratique_3"></select></div>
+        <div><label>Durée totale de la séquence</label><input id="Duree_totale_sequence"></div>
+        <div><label>Nombre de séances</label><input id="Nombre_seances"></div>
+        <div style="grid-column:span 2"><label>Conditions temporelles</label><textarea id="Conditions_temporelles_resume"></textarea></div>
+        <div style="grid-column:span 2"><label>Conditions matérielles</label><textarea id="Conditions_materielles"></textarea></div>
+        <div><label>Matériel nécessaire</label><textarea id="Materiel_necessaire"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>5. Parcours et liens</h2>
+      <div class="grid">
+        <div><label><input type="checkbox" id="Parcours_citoyen" style="width:auto;min-height:auto"> Parcours citoyen</label></div>
+        <div><label><input type="checkbox" id="Parcours_sante" style="width:auto;min-height:auto"> Parcours santé</label></div>
+        <div><label><input type="checkbox" id="Parcours_avenir" style="width:auto;min-height:auto"> Parcours avenir</label></div>
+        <div><label><input type="checkbox" id="Parcours_artistique_culturel" style="width:auto;min-height:auto"> Parcours d’éducation artistique et culturelle</label></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>Liens interdisciplinaires</label><textarea id="Liens_interdisciplinaires"></textarea></div>
+        <div><label>Usage numérique pédagogique</label><textarea id="Usage_numerique_pedagogique"></textarea></div>
+        <div><label>Usage numérique artistique</label><textarea id="Usage_numerique_artistique"></textarea></div>
+      </div>
+      <div class="hiddenStore"><input type="checkbox" id="Evaluation_formative"><input type="checkbox" id="Evaluation_formative_pairs"><input type="checkbox" id="Evaluation_sommative"><input type="checkbox" id="Evaluation_certificative"><textarea id="Commentaire_evaluation"></textarea></div>
+    </div>
+
+    <div class="card">
+      <h2>6. Compétences</h2>
+      <div class="muted" style="margin-bottom:10px">Sélection par clic, avec items détaillés sous chaque famille.</div>
+      <div id="competenceSummary" class="pillbox" style="margin-bottom:10px"></div>
+      <div id="competenceList" class="checks"></div>
+    </div>
+
+    <div class="card">
+      <h2>7. Références associées</h2>
+      <div id="referenceSummary" class="pillbox" style="margin-bottom:10px"></div>
+      <div id="referenceList" class="checks"></div>
+    </div>
+
+    <div class="card">
+      <h2>8. Prolongements</h2>
+      <div class="grid2">
+        <div>
+          <label>Ouverture vers une autre fiche</label>
+          <select id="Ouverture_autre_sequence_select"><option value="">Aucune</option></select>
+        </div>
+        <div><label>Bilan</label><textarea id="Bilan"></textarea></div>
+        <div style="grid-column:span 2"><label>Remarques enseignant</label><textarea id="Remarques_enseignant"></textarea></div>
+      </div>
+      <div class="hiddenStore"><input id="Ouverture_autre_sequence"></div>
+    </div>
+  </main>
+</div>
+<script>
+const PROGRAM_DATA={"Cycle 3":{niveaux:["CM1","CM2","6e"],axes:{"La représentation plastique et les dispositifs de présentation":["La ressemblance","L’autonomie du geste graphique, pictural, sculptural","Les différentes catégories d’images, leurs procédés de fabrication, leurs transformations","La narration visuelle","La mise en regard et en espace","La prise en compte du spectateur, de l’effet recherché"],"Les fabrications et la relation entre l’objet et l’espace":["L’hétérogénéité et la cohérence plastiques","L’invention, la fabrication, les détournements, les mises en scène des objets","L’espace en trois dimensions"],"La matérialité de la production plastique et la sensibilité aux constituants de l’œuvre":["La réalité concrète d’une production ou d’une œuvre","Les qualités physiques des matériaux","Les effets du geste et de l’instrument","La matérialité et la qualité de la couleur"]}},"Cycle 4":{niveaux:["5e","4e","3e"],axes:{"La représentation ; images, réalité et fiction":["La ressemblance","Le dispositif de représentation","La narration visuelle","L’autonomie de l’œuvre d’art, les modalités de son autoréférenciation","La création, la matérialité, le statut, la signification des images","La conception, la production et la diffusion de l’œuvre plastique à l’ère du numérique"],"La matérialité de l’œuvre ; l’objet et l’œuvre":["La transformation de la matière","Les qualités physiques des matériaux","La matérialité et la qualité de la couleur","L’objet comme matériau en art","Les représentations et statuts de l’objet en art","Le numérique en tant que processus et matériau artistiques"],"L’œuvre, l’espace, l’auteur, le spectateur":["La relation du corps à la production artistique","La présence matérielle de l’œuvre dans l’espace, la présentation de l’œuvre","L’expérience sensible de l’espace de l’œuvre","Les métissages entre arts plastiques et technologies numériques"]}}};
+const NOTIONS=["forme","espace","lumière","couleur","matière","corps","temps","support","outil"];
+const CHAMPS=["Pratiques bidimensionnelles","Pratiques tridimensionnelles","Pratiques artistiques de l’image fixe et animée","Pratiques de la création numérique"];
+const COMPETENCE_DETAILS={"Cycle 3":{"Plasticienne":["Expérimenter des gestes, des outils et des matériaux variés","Organiser une production sur un support en fonction d’une intention","Transformer, assembler ou détourner des formes, des images ou des objets"],"Méthodologique":["Comprendre les étapes d’un projet et s’y repérer","Faire des choix, essayer, recommencer et ajuster son travail","Mener une réalisation jusqu’à une forme présentable"],"Comportementale":["Décrire sa production avec un vocabulaire simple et précis","Écouter, observer et prendre en compte les remarques","Présenter son travail et expliquer quelques choix"],"Culturelle":["Repérer des œuvres variées et quelques références artistiques","Comparer des productions pour relever des ressemblances ou des écarts","Relier une production à une question artistique ou à une époque"]},"Cycle 4":{"Plasticienne":["Choisir des moyens plastiques adaptés à une intention","Articuler matériau, forme, couleur, espace ou image dans une réalisation","Exploiter des contraintes pour produire un effet visuel ou sensible","Réinvestir des essais dans une production plus aboutie"],"Méthodologique":["Concevoir un projet, anticiper ses étapes et organiser le travail","Faire évoluer une idée à partir d’essais, d’erreurs et de choix assumés","Présenter une réalisation finalisée et lisible pour un spectateur"],"Comportementale":["Employer un vocabulaire plastique précis pour expliquer sa démarche","Argumenter des choix et analyser des effets produits","Participer à l’échange oral et prendre en compte d’autres points de vue"],"Culturelle":["Mobiliser des références artistiques en lien avec le sujet","Situer une œuvre par son domaine, son époque ou ses enjeux","Mettre en relation sa pratique avec des œuvres et des démarches d’artistes"]}};
+const STATUTS=["Brouillon","En cours","Terminé","Archivé"];
+const MODALITES=["Individuel","Groupe","Individuel et groupe"];
+let workbook=null, workbookName='classeur_noyau_fiche_de_cours_corrige.xlsx', sheetsData={}, currentFicheId='';
+const centralFields=['ID_fiche','Titre_fiche','Numero_sequence','Annee_scolaire','Cycle','Niveau','Classe_cible','Statut_fiche','Axe_programme','Entree_programme','Questionnement_principal','Questionnement_secondaire_1','Questionnement_secondaire_2','Questionnement_secondaire_3','Notion_1','Notion_2','Notion_3','Notion_4','Vocabulaire_1','Vocabulaire_2','Vocabulaire_3','Vocabulaire_4','Vocabulaire_5','Vocabulaire_complementaire','Objectif_1','Objectif_2','Objectif_3','Objectif_4','Evaluation_formative','Evaluation_formative_pairs','Evaluation_sommative','Evaluation_certificative','Commentaire_evaluation','Sujet_demande_incitation','Consigne_principale','Contrainte_principale','Contrainte_secondaire','Champ_pratique_1','Champ_pratique_2','Champ_pratique_3','Duree_totale_sequence','Nombre_seances','Conditions_temporelles_resume','Conditions_materielles','Materiel_necessaire','Travail_individuel_ou_groupe','Usage_numerique_pedagogique','Usage_numerique_artistique','Liens_interdisciplinaires','Parcours_citoyen','Parcours_sante','Parcours_avenir','Parcours_artistique_culturel','Ouverture_autre_sequence','Bilan','Remarques_enseignant'];
+function byId(id){return document.getElementById(id)}
+function setStatus(msg){byId('status').textContent=msg}
+function normalize(v){return (v??'').toString().trim()}
+function uniq(arr){return [...new Set(arr.filter(Boolean))]}
+function rowsFromSheet(name){return sheetsData[name]||[]}
+function optionize(select, values, placeholder=''){select.innerHTML=''; if(placeholder!==null){const o=document.createElement('option');o.value='';o.textContent=placeholder||'—';select.appendChild(o)} values.forEach(v=>{if(v){const o=document.createElement('option');o.value=v;o.textContent=v;select.appendChild(o)}})}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function splitVocabulary(text){return normalize(text).split(/\n|,/).map(v=>v.trim()).filter(Boolean)}
+function buildVocabularyTextFromRow(row){return [row.Vocabulaire_1,row.Vocabulaire_2,row.Vocabulaire_3,row.Vocabulaire_4,row.Vocabulaire_5,row.Vocabulaire_complementaire].map(normalize).filter(Boolean).join('\n')}
+function updateCurrentFicheBadge(){const id=normalize(byId('ID_fiche').value), titre=normalize(byId('Titre_fiche').value); byId('currentFicheBadge').textContent=id?`${id}${titre?' — '+titre:''}`:'Aucune fiche ouverte'}
+function initStaticLists(){optionize(byId('Cycle'),Object.keys(PROGRAM_DATA),'Choisir'); optionize(byId('Statut_fiche'),STATUTS,'Choisir'); optionize(byId('Travail_individuel_ou_groupe'),MODALITES,'Choisir'); ['Notion_1','Notion_2','Notion_3','Notion_4'].forEach(id=>optionize(byId(id),NOTIONS,'Choisir')); ['Champ_pratique_1','Champ_pratique_2','Champ_pratique_3'].forEach(id=>optionize(byId(id),CHAMPS,'Choisir')); optionize(byId('Niveau'),[],'Choisir un cycle'); optionize(byId('Axe_programme'),[],'Choisir un cycle'); ['Questionnement_principal','Questionnement_secondaire_1','Questionnement_secondaire_2','Questionnement_secondaire_3'].forEach(id=>optionize(byId(id),[],'Choisir un axe')); optionize(byId('filterCycle'),['Cycle 3','Cycle 4'],'Tous'); optionize(byId('filterNotion'),NOTIONS,'Toutes')}
+function refreshProgramSelectors(){const cycle=byId('Cycle').value, data=PROGRAM_DATA[cycle]; if(!data){optionize(byId('Niveau'),[],'Choisir un cycle'); optionize(byId('Axe_programme'),[],'Choisir un cycle'); ['Questionnement_principal','Questionnement_secondaire_1','Questionnement_secondaire_2','Questionnement_secondaire_3'].forEach(id=>optionize(byId(id),[],'Choisir un axe')); byId('Entree_programme').value=''; renderCompetences(); renderReferences(); return;} const oldN=byId('Niveau').value, oldA=byId('Axe_programme').value; optionize(byId('Niveau'),data.niveaux,'Choisir'); if(data.niveaux.includes(oldN)) byId('Niveau').value=oldN; const axes=Object.keys(data.axes); optionize(byId('Axe_programme'),axes,'Choisir'); if(axes.includes(oldA)) byId('Axe_programme').value=oldA; byId('Entree_programme').value=byId('Axe_programme').value||''; refreshQuestionnements(); renderCompetences(); renderReferences()}
+function refreshQuestionnements(){const cycle=byId('Cycle').value, axe=byId('Axe_programme').value; byId('Entree_programme').value=axe||''; const qs=PROGRAM_DATA[cycle]?.axes?.[axe]||[]; ['Questionnement_principal','Questionnement_secondaire_1','Questionnement_secondaire_2','Questionnement_secondaire_3'].forEach(id=>{const old=byId(id).value; optionize(byId(id),qs,axe?'Choisir':'Choisir un axe'); if(qs.includes(old)) byId(id).value=old;}); renderReferences()}
+function getExpandedCompetenceRows(cycle){let base=rowsFromSheet('Competences').filter(r=>normalize(r.Code_competence)); if(cycle) base=base.filter(r=>!normalize(r.Cycle)||normalize(r.Cycle)===cycle); const details=COMPETENCE_DETAILS[cycle]||{}; const out=[]; base.forEach(b=>{const fam=normalize(b.Famille_competence); const items=(details[fam]&&details[fam].length)?details[fam]:[normalize(b.Intitule_competence)]; items.forEach((label,idx)=>out.push({group:fam,code:`${normalize(b.Code_competence)}__${idx+1}`,baseCode:normalize(b.Code_competence),type:normalize(b.Type_competence),label}))}); return out}
+function renderCompetences(){const cycle=byId('Cycle').value, list=byId('competenceList'); list.innerHTML=''; const rows=getExpandedCompetenceRows(cycle), groups={}; rows.forEach(r=>{if(!groups[r.group]) groups[r.group]=[]; groups[r.group].push(r)}); Object.keys(groups).forEach(g=>{const block=document.createElement('div'); block.className='groupBlock'; block.innerHTML=`<div class="groupTitle">${escapeHtml(g)}</div>`; groups[g].forEach(r=>{const lab=document.createElement('label'); lab.innerHTML=`<input type="checkbox" value="${escapeHtml(r.code)}" data-base-code="${escapeHtml(r.baseCode)}" data-family="${escapeHtml(r.group)}" data-type="${escapeHtml(r.type)}"><span>${escapeHtml(r.label)}</span>`; block.appendChild(lab)}); list.appendChild(block)}); list.querySelectorAll('input').forEach(i=>i.addEventListener('change',updateCompetenceSummary)); updateCompetenceSummary()}
+function updateCompetenceSummary(){const box=byId('competenceSummary'); const sel=[...document.querySelectorAll('#competenceList input:checked')].map(i=>`${i.dataset.family} — ${i.parentElement.innerText.trim()}`); box.innerHTML=sel.length?sel.map(t=>`<span class="pill">${escapeHtml(t)}</span>`).join(''):'<span class="muted">Aucune compétence cochée.</span>'}
+function renderReferences(){const cycle=byId('Cycle').value, axe=byId('Axe_programme').value, q=byId('Questionnement_principal').value, list=byId('referenceList'); list.innerHTML=''; let rows=rowsFromSheet('Oeuvres').filter(r=>normalize(r.ID_oeuvre)); if(cycle) rows=rows.filter(r=>!normalize(r.Cycle)||normalize(r.Cycle)===cycle); if(axe) rows=rows.filter(r=>!normalize(r.Axe)||normalize(r.Axe)===axe); if(q) rows=rows.filter(r=>!normalize(r.Questionnement_principal)||normalize(r.Questionnement_principal)===q); if(rows.length===0) rows=rowsFromSheet('Oeuvres').filter(r=>normalize(r.ID_oeuvre)&&(!cycle||!normalize(r.Cycle)||normalize(r.Cycle)===cycle)).slice(0,30); rows.slice(0,80).forEach(r=>{const txt=[normalize(r.Artiste),normalize(r.Titre)].filter(Boolean).join(' — '); const lab=document.createElement('label'); lab.innerHTML=`<input type="checkbox" value="${escapeHtml(normalize(r.ID_oeuvre))}"><span><b>${escapeHtml(txt||r.ID_oeuvre)}</b><br><span class="muted">${escapeHtml([normalize(r.Domaine),normalize(r.Questionnement_principal)].filter(Boolean).join(' • '))}</span></span>`; list.appendChild(lab)}); list.querySelectorAll('input').forEach(i=>i.addEventListener('change',updateReferenceSummary)); updateReferenceSummary()}
+function updateReferenceSummary(){const box=byId('referenceSummary'); const sel=[...document.querySelectorAll('#referenceList input:checked')].map(i=>i.parentElement.innerText.split('\n')[0].trim()); box.innerHTML=sel.length?sel.map(t=>`<span class="pill">${escapeHtml(t)}</span>`).join(''):'<span class="muted">Aucune référence sélectionnée.</span>'}
+function populateOuvertureOptions(){const select=byId('Ouverture_autre_sequence_select'); const current=byId('Ouverture_autre_sequence').value||''; select.innerHTML='<option value="">Aucune</option>'; rowsFromSheet('Fiches_de_cours').filter(r=>normalize(r.ID_fiche)).forEach(r=>{const val=`${r.ID_fiche} — ${r.Titre_fiche||'Sans titre'}`; const o=document.createElement('option'); o.value=val; o.textContent=val; select.appendChild(o)}); if(current) select.value=current}
+function getAxeColorClass(cycle, axe){
+  const c=normalize(cycle), a=normalize(axe);
+  if(c==='Cycle 3'){
+    if(a.includes('représentation plastique')||a.includes('representation plastique')) return 'axe-c3-representation';
+    if(a.includes('fabrications')) return 'axe-c3-fabrications';
+    if(a.includes('matérialité')||a.includes('materialite')) return 'axe-c3-materialite';
+  }
+  if(c==='Cycle 4'){
+    if(a.includes('représentation')||a.includes('representation')) return 'axe-c4-representation';
+    if(a.includes('matérialité')||a.includes('materialite')) return 'axe-c4-materialite';
+    if(a.includes('espace')||a.includes('spectateur')||a.includes('auteur')) return 'axe-c4-espace';
+  }
+  return '';
+}
+
+function populateFiltersFromSheets(){const fiches=rowsFromSheet('Fiches_de_cours').filter(r=>normalize(r.ID_fiche)); optionize(byId('filterCycle'),uniq(fiches.map(r=>normalize(r.Cycle))),'Tous'); const fc=byId('filterCycle').value; let sub=fiches; if(fc) sub=sub.filter(r=>normalize(r.Cycle)===fc); optionize(byId('filterNiveau'),uniq(sub.map(r=>normalize(r.Niveau))),'Tous'); optionize(byId('filterAxe'),uniq(sub.map(r=>normalize(r.Axe_programme))),'Tous'); optionize(byId('filterNotion'),NOTIONS,'Toutes')}
+function renderFicheList(){const box=byId('ficheList'); if(!workbook){box.innerHTML=''; byId('resultCount').textContent='0'; return;} const term=normalize(byId('searchInput').value).toLowerCase(); const fc=byId('filterCycle').value, fn=byId('filterNiveau').value, fa=byId('filterAxe').value, fno=byId('filterNotion').value; let rows=rowsFromSheet('Fiches_de_cours').filter(r=>normalize(r.ID_fiche)); if(fc) rows=rows.filter(r=>normalize(r.Cycle)===fc); if(fn) rows=rows.filter(r=>normalize(r.Niveau)===fn); if(fa) rows=rows.filter(r=>normalize(r.Axe_programme)===fa); if(fno) rows=rows.filter(r=>[r.Notion_1,r.Notion_2,r.Notion_3,r.Notion_4].map(normalize).includes(fno)); if(term){rows=rows.filter(r=>[r.ID_fiche,r.Titre_fiche,r.Questionnement_principal,r.Consigne_principale,r.Sujet_demande_incitation,r.Axe_programme].map(normalize).join(' ').toLowerCase().includes(term))} rows.sort((a,b)=>normalize(a.ID_fiche).localeCompare(normalize(b.ID_fiche))); byId('resultCount').textContent=String(rows.length); box.innerHTML=''; rows.forEach(r=>{const btn=document.createElement('button'); btn.type='button'; const axeClass=getAxeColorClass(r.Cycle,r.Axe_programme); btn.className='ficheItem '+axeClass+(normalize(byId('ID_fiche').value)===normalize(r.ID_fiche)?' active':''); const titre=escapeHtml(r.Titre_fiche||'Sans titre'); const code=escapeHtml(normalize(r.ID_fiche)); const meta=escapeHtml([r.Cycle,r.Niveau].filter(Boolean).join(' • ')); const axe=escapeHtml(r.Axe_programme||''); btn.innerHTML=`<div class="ficheCode">${code}</div><div class="ficheTitle">${titre}</div><div class="ficheMeta">${meta}</div><div class="axeBadge ${axeClass}">${axe}</div>`; btn.addEventListener('click',()=>{fillForm(r); setStatus(`Fiche ${r.ID_fiche} ouverte.`); renderFicheList()}); box.appendChild(btn)}); if(!rows.length) box.innerHTML='<div class="muted">Aucune fiche trouvée avec ces filtres.</div>'}
+function parseWorkbook(arrayBuffer){workbook=XLSX.read(arrayBuffer,{type:'array'}); sheetsData={}; workbook.SheetNames.forEach(name=>{sheetsData[name]=XLSX.utils.sheet_to_json(workbook.Sheets[name],{defval:''})}); populateOuvertureOptions(); populateFiltersFromSheets(); renderCompetences(); renderReferences(); renderFicheList()}
+function generateId(){const ids=rowsFromSheet('Fiches_de_cours').map(r=>normalize(r.ID_fiche)).filter(Boolean); let max=0; ids.forEach(id=>{const m=id.match(/(\d+)/); if(m) max=Math.max(max,parseInt(m[1],10))}); return `FICHE_${String(max+1).padStart(4,'0')}`}
+function clearForm(){centralFields.forEach(f=>{const el=byId(f); if(!el) return; if(el.type==='checkbox') el.checked=false; else el.value=''}); byId('ID_fiche').value=generateId(); byId('Vocabulaire_global').value=''; byId('Ouverture_autre_sequence_select').value=''; currentFicheId=''; refreshProgramSelectors(); renderCompetences(); renderReferences(); updateCurrentFicheBadge(); renderFicheList()}
+function syncOuvertureSelection(){byId('Ouverture_autre_sequence').value=byId('Ouverture_autre_sequence_select').value||''}
+function fillForm(row){currentFicheId=row.ID_fiche||''; centralFields.forEach(f=>{const el=byId(f); if(!el) return; if(el.type==='checkbox') el.checked=['Oui','TRUE','true','1',1,true].includes(row[f]); else el.value=row[f]||''}); byId('ID_fiche').value=row.ID_fiche||''; byId('Vocabulaire_global').value=buildVocabularyTextFromRow(row); refreshProgramSelectors(); byId('Cycle').value=row.Cycle||''; refreshProgramSelectors(); byId('Niveau').value=row.Niveau||''; byId('Axe_programme').value=row.Axe_programme||''; refreshQuestionnements(); ['Questionnement_principal','Questionnement_secondaire_1','Questionnement_secondaire_2','Questionnement_secondaire_3','Notion_1','Notion_2','Notion_3','Notion_4','Champ_pratique_1','Champ_pratique_2','Champ_pratique_3','Statut_fiche','Travail_individuel_ou_groupe'].forEach(id=>{if(byId(id)) byId(id).value=row[id]||''}); byId('Ouverture_autre_sequence_select').value=row.Ouverture_autre_sequence||''; renderCompetences(); renderReferences(); loadLinkedSelections(row.ID_fiche); syncOuvertureSelection(); updateCurrentFicheBadge()}
+function loadLinkedSelections(id){const compRows=rowsFromSheet('Fiche_Competences').filter(r=>normalize(r.ID_fiche)===id&&(normalize(r.Selectionnee)==='Oui'||r.Selectionnee===true||r.Selectionnee===1)); const compCodes=compRows.map(r=>normalize(r.Code_competence)); const compLabels=compRows.map(r=>normalize(r.Intitule_competence)); document.querySelectorAll('#competenceList input').forEach(cb=>{const label=normalize(cb.parentElement.innerText); cb.checked=compCodes.includes(cb.value)||compCodes.includes(cb.dataset.baseCode)||compLabels.includes(label)}); updateCompetenceSummary(); const refIds=rowsFromSheet('Fiche_References').filter(r=>normalize(r.ID_fiche)===id).map(r=>normalize(r.ID_oeuvre)); document.querySelectorAll('#referenceList input').forEach(cb=>cb.checked=refIds.includes(cb.value)); updateReferenceSummary()}
+function collectCentralData(){const out={}; centralFields.forEach(f=>{const el=byId(f); if(!el) return; out[f]=el.type==='checkbox'?(el.checked?'Oui':''):el.value}); const vocab=splitVocabulary(byId('Vocabulaire_global').value); out.Vocabulaire_1=vocab[0]||''; out.Vocabulaire_2=vocab[1]||''; out.Vocabulaire_3=vocab[2]||''; out.Vocabulaire_4=vocab[3]||''; out.Vocabulaire_5=vocab[4]||''; out.Vocabulaire_complementaire=vocab.slice(5).join(', '); out.Evaluation_formative=''; out.Evaluation_formative_pairs=''; out.Evaluation_sommative=''; out.Evaluation_certificative=''; out.Commentaire_evaluation=''; out.ID_fiche=byId('ID_fiche').value||generateId(); out.Entree_programme=byId('Axe_programme').value||''; out.Ouverture_autre_sequence=byId('Ouverture_autre_sequence').value||''; return out}
+function saveToWorkbook(){if(!workbook){setStatus('Chargez d’abord un classeur.'); return;} const data=collectCentralData(); if(!data.Titre_fiche){setStatus('Renseignez au moins le titre de la fiche.'); return;} let fiches=rowsFromSheet('Fiches_de_cours').filter(r=>Object.values(r).some(v=>normalize(v))); const idx=fiches.findIndex(r=>normalize(r.ID_fiche)===data.ID_fiche); if(idx>=0) fiches[idx]={...fiches[idx],...data}; else fiches.push(data); sheetsData['Fiches_de_cours']=fiches; workbook.Sheets['Fiches_de_cours']=XLSX.utils.json_to_sheet(fiches,{header:centralFields}); let fc=rowsFromSheet('Fiche_Competences').filter(r=>normalize(r.ID_fiche)!==data.ID_fiche); [...document.querySelectorAll('#competenceList input:checked')].forEach((input,index)=>{fc.push({ID_ligne_competence:`${data.ID_fiche}_COMP_${String(index+1).padStart(2,'0')}`,ID_fiche:data.ID_fiche,Type_competence:input.dataset.type||'',Famille_competence:input.dataset.family||'',Code_competence:input.value,Intitule_competence:input.parentElement.innerText.trim(),Selectionnee:'Oui',Remarque:''})}); sheetsData['Fiche_Competences']=fc; workbook.Sheets['Fiche_Competences']=XLSX.utils.json_to_sheet(fc); let fr=rowsFromSheet('Fiche_References').filter(r=>normalize(r.ID_fiche)!==data.ID_fiche); [...document.querySelectorAll('#referenceList input:checked')].map(i=>i.value).forEach((idOeuvre,index)=>{fr.push({ID_ligne_reference:`${data.ID_fiche}_REF_${String(index+1).padStart(2,'0')}`,ID_fiche:data.ID_fiche,ID_oeuvre:idOeuvre,Type_reference:'Arts plastiques',Rang_affichage:index+1,Reference_obligatoire:'',Commentaire_reference:''})}); sheetsData['Fiche_References']=fr; workbook.Sheets['Fiche_References']=XLSX.utils.json_to_sheet(fr); populateOuvertureOptions(); populateFiltersFromSheets(); updateCurrentFicheBadge(); renderFicheList(); setStatus(`Fiche ${data.ID_fiche} enregistrée dans le classeur.`)}
+function downloadWorkbook(){if(!workbook){setStatus('Aucun classeur chargé.'); return;} XLSX.writeFile(workbook, workbookName.replace(/\.xlsx?$/i,'')+'_maj.xlsx'); setStatus('Téléchargement du classeur lancé.')}
+byId('fileInput').addEventListener('change',async e=>{const file=e.target.files[0]; if(!file) return; workbookName=file.name; const buffer=await file.arrayBuffer(); parseWorkbook(buffer); clearForm(); setStatus(`Classeur chargé : ${file.name}`)});
+byId('newBtn').addEventListener('click',()=>{clearForm(); setStatus('Nouvelle fiche prête.')});
+byId('saveBtn').addEventListener('click',saveToWorkbook); byId('downloadBtn').addEventListener('click',downloadWorkbook); byId('scrollTopBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'})); byId('Titre_fiche').addEventListener('input',()=>{updateCurrentFicheBadge(); renderFicheList()}); byId('ID_fiche').addEventListener('input',()=>{updateCurrentFicheBadge(); renderFicheList()}); byId('Cycle').addEventListener('change',refreshProgramSelectors); byId('Axe_programme').addEventListener('change',refreshQuestionnements); byId('Questionnement_principal').addEventListener('change',renderReferences); byId('Ouverture_autre_sequence_select').addEventListener('change',syncOuvertureSelection);
+['filterCycle','filterNiveau','filterAxe','filterNotion','searchInput'].forEach(id=>byId(id).addEventListener('input',renderFicheList)); byId('filterCycle').addEventListener('change',()=>{populateFiltersFromSheets(); renderFicheList()}); byId('resetFiltersBtn').addEventListener('click',()=>{['filterCycle','filterNiveau','filterAxe','filterNotion','searchInput'].forEach(id=>byId(id).value=''); populateFiltersFromSheets(); renderFicheList()});
+initStaticLists(); clearForm(); updateCurrentFicheBadge();
+</script>
+</body>
+</html>
