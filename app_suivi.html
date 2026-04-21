@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Suivi de classe — MAXIOUTILS</title>
+<style>
+  :root{--bg:#f6f7fb;--card:#fff;--line:#d9deea;--ink:#1d2433;--muted:#647089;--accent:#2e5bff}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  h1{margin:0 0 6px 0;font-size:26px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{max-width:1500px;margin:auto;padding:16px}
+  .top,.stats,.tables{display:grid;gap:14px}
+  .top{grid-template-columns:1.1fr .8fr auto auto auto}
+  .stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:14px 0}
+  .tables{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,textarea,button{font:inherit}
+  input,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #cfd6e4;background:#fff}
+  textarea{min-height:90px;resize:vertical}
+  button{padding:12px 14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+  .stat .n{font-size:28px;font-weight:700}
+  .tableHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .student{border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px;background:#fbfcff}
+  .student.absent{opacity:.55;background:#f1f3f8}
+  .studentTop{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+  .studentName{font-weight:700}
+  .statusBtns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .statusBtn{padding:8px 6px;border-radius:10px;border:1px solid var(--line);background:#fff;color:#1d2433;font-size:13px;font-weight:700}
+  .statusBtn.active-work{background:#daf3dd;border-color:#7ac486}
+  .statusBtn.active-think{background:#fff3c6;border-color:#d8b545}
+  .statusBtn.active-help{background:#ffd9d9;border-color:#de7676}
+  .statusBtn.active-none{background:#eceff5;border-color:#b7c1d8}
+  .mini{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .pill{padding:5px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .muted{color:var(--muted)}
+  @media (max-width:980px){.top{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:640px){.top,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Suivi de classe</h1>
+  <div class="sub">Version de départ : tables, élèves, absences, positionnements rapides, notes et export JSON.</div>
+</header>
+
+<div class="wrap">
+  <div class="top">
+    <div class="card">
+      <label>Nom de la classe</label>
+      <input id="className" placeholder="ex. 4e B" />
+    </div>
+    <div class="card">
+      <label>Date / séance</label>
+      <input id="sessionDate" placeholder="ex. 22/04/2026 - séance 3" />
+    </div>
+    <button id="addTableBtn">Ajouter une table</button>
+    <button class="secondary" id="saveBtn">Sauvegarder</button>
+    <button class="secondary" id="exportBtn">Exporter JSON</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="muted">Élèves</div><div class="n" id="statStudents">0</div></div>
+    <div class="stat"><div class="muted">Absents</div><div class="n" id="statAbsent">0</div></div>
+    <div class="stat"><div class="muted">Au travail</div><div class="n" id="statWork">0</div></div>
+    <div class="stat"><div class="muted">À soutenir</div><div class="n" id="statHelp">0</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <label>Notes de séance</label>
+    <textarea id="sessionNotes" placeholder="Incidents, remarques, repères pour la prochaine séance..."></textarea>
+  </div>
+
+  <div id="tables" class="tables"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'maxioutils_suivi_classe_v1';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {
+  className:'', sessionDate:'', sessionNotes:'',
+  tables:[
+    {name:'Table 1', students:[
+      {name:'Élève 1', absent:false, status:'none', note:''},
+      {name:'Élève 2', absent:false, status:'none', note:''}
+    ]}
+  ]
+};
+
+const els = {
+  className: document.getElementById('className'),
+  sessionDate: document.getElementById('sessionDate'),
+  sessionNotes: document.getElementById('sessionNotes'),
+  tables: document.getElementById('tables'),
+  statStudents: document.getElementById('statStudents'),
+  statAbsent: document.getElementById('statAbsent'),
+  statWork: document.getElementById('statWork'),
+  statHelp: document.getElementById('statHelp')
+};
+
+function saveState(){
+  state.className = els.className.value;
+  state.sessionDate = els.sessionDate.value;
+  state.sessionNotes = els.sessionNotes.value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  renderStats();
+}
+
+function renderStats(){
+  const students = state.tables.flatMap(t => t.students);
+  els.statStudents.textContent = students.length;
+  els.statAbsent.textContent = students.filter(s => s.absent).length;
+  els.statWork.textContent = students.filter(s => !s.absent && s.status === 'work').length;
+  els.statHelp.textContent = students.filter(s => !s.absent && s.status === 'help').length;
+}
+
+function statusLabel(s){
+  return s==='work' ? 'Au travail' : s==='think' ? 'En réflexion' : s==='help' ? 'À soutenir' : 'Sans repère';
+}
+
+function render(){
+  els.className.value = state.className || '';
+  els.sessionDate.value = state.sessionDate || '';
+  els.sessionNotes.value = state.sessionNotes || '';
+  els.tables.innerHTML = '';
+  state.tables.forEach((table, ti) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const studentCount = table.students.length;
+    card.innerHTML = `
+      <div class="tableHead">
+        <input value="${table.name.replace(/"/g,'&quot;')}" data-table-name="${ti}" style="font-weight:700" />
+        <button class="secondary" data-add-student="${ti}">+ Élève</button>
+      </div>
+      <div class="muted" style="margin-bottom:10px">${studentCount} élève(s)</div>
+      <div id="tableBody_${ti}"></div>
+      <div class="mini">
+        <button class="secondary" data-remove-table="${ti}">Supprimer la table</button>
+      </div>
+    `;
+    els.tables.appendChild(card);
+    const body = card.querySelector(`#tableBody_${ti}`);
+    table.students.forEach((student, si) => {
+      const sdiv = document.createElement('div');
+      sdiv.className = 'student' + (student.absent ? ' absent' : '');
+      sdiv.innerHTML = `
+        <div class="studentTop">
+          <input value="${student.name.replace(/"/g,'&quot;')}" data-student-name="${ti}_${si}" />
+          <label class="pill"><input type="checkbox" data-absent="${ti}_${si}" ${student.absent ? 'checked' : ''} style="width:auto"> absent</label>
+        </div>
+        <div class="statusBtns">
+          <button class="statusBtn ${student.status==='none' ? 'active-none' : ''}" data-status="${ti}_${si}_none">—</button>
+          <button class="statusBtn ${student.status==='work' ? 'active-work' : ''}" data-status="${ti}_${si}_work">🟢</button>
+          <button class="statusBtn ${student.status==='think' ? 'active-think' : ''}" data-status="${ti}_${si}_think">🟡</button>
+          <button class="statusBtn ${student.status==='help' ? 'active-help' : ''}" data-status="${ti}_${si}_help">🔴</button>
+        </div>
+        <div class="mini">
+          <span class="pill">${statusLabel(student.status)}</span>
+          <button class="secondary" data-remove-student="${ti}_${si}">Supprimer</button>
+        </div>
+        <textarea data-note="${ti}_${si}" placeholder="Note rapide sur l’élève...">${student.note || ''}</textarea>
+      `;
+      body.appendChild(sdiv);
+    });
+  });
+
+  document.querySelectorAll('[data-table-name]').forEach(el => {
+    el.addEventListener('input', e => { state.tables[+e.target.dataset.tableName].name = e.target.value; saveState(); });
+  });
+  document.querySelectorAll('[data-student-name]').forEach(el => {
+    el.addEventListener('input', e => {
+      const [ti, si] = e.target.dataset.studentName.split('_').map(Number);
+      state.tables[ti].students[si].name = e.target.value;
+      saveState();
+    });
+  });
+  document.querySelectorAll('[data-absent]').forEach(el => {
+    el.addEventListener('change', e => {
+      const [ti, si] = e.target.dataset.absent.split('_').map(Number);
+      state.tables[ti].students[si].absent = e.target.checked;
+      saveState(); render();
+    });
+  });
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.addEventListener('click', e => {
+      const [ti, si, status] = e.target.dataset.status.split('_');
+      state.tables[+ti].students[+si].status = status;
+      saveState(); render();
+    });
+  });
+  document.querySelectorAll('[data-note]').forEach(el => {
+    el.addEventListener('input', e => {
+      const [ti, si] = e.target.dataset.note.split('_').map(Number);
+      state.tables[ti].students[si].note = e.target.value;
+      saveState();
+    });
+  });
+  document.querySelectorAll('[data-add-student]').forEach(el => {
+    el.addEventListener('click', e => {
+      const ti = +e.target.dataset.addStudent;
+      state.tables[ti].students.push({name:`Élève ${state.tables[ti].students.length+1}`, absent:false, status:'none', note:''});
+      saveState(); render();
+    });
+  });
+  document.querySelectorAll('[data-remove-student]').forEach(el => {
+    el.addEventListener('click', e => {
+      const [ti, si] = e.target.dataset.removeStudent.split('_').map(Number);
+      state.tables[ti].students.splice(si, 1);
+      saveState(); render();
+    });
+  });
+  document.querySelectorAll('[data-remove-table]').forEach(el => {
+    el.addEventListener('click', e => {
+      const ti = +e.target.dataset.removeTable;
+      state.tables.splice(ti, 1);
+      if(!state.tables.length) state.tables.push({name:'Table 1', students:[]});
+      saveState(); render();
+    });
+  });
+
+  renderStats();
+}
+
+document.getElementById('addTableBtn').addEventListener('click', () => {
+  state.tables.push({name:`Table ${state.tables.length+1}`, students:[]});
+  saveState(); render();
+});
+document.getElementById('saveBtn').addEventListener('click', saveState);
+document.getElementById('exportBtn').addEventListener('click', () => {
+  saveState();
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `suivi_classe_${(state.className || 'classe').replace(/\s+/g,'_')}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+els.className.addEventListener('input', saveState);
+els.sessionDate.addEventListener('input', saveState);
+els.sessionNotes.addEventListener('input', saveState);
+
+render();
+</script>
+</body>
+</html>
