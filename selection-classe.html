@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sélectionner la classe</title>
+<style>
+:root{
+  --bg:#f1f5f9; --card:#ffffff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+  --shadow:0 2px 10px rgba(15,23,42,.06);
+  --blue:#2563eb; --blue-soft:#dbeafe;
+  --slate:#475569; --slate-soft:#e2e8f0;
+  --green:#059669; --green-soft:#d1fae5;
+  --amber:#d97706; --amber-soft:#fef3c7;
+  --violet:#7c3aed; --violet-soft:#ede9fe;
+  --dark:#0f172a; --hover:#f8fafc;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:#fff;border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1200px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.title-wrap p{margin:0 0 6px 0;font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.title{font-size:1.25rem;font-weight:700;margin:0;color:var(--dark)}
+.container{max-width:1200px;margin:0 auto;padding:28px 24px 48px}
+.section{background:#fff;border:1px solid var(--border);border-radius:28px;padding:24px;box-shadow:var(--shadow);margin-bottom:22px}
+.section h1,.section h2,.section h3{margin:0;color:var(--dark)}
+.section p{margin:8px 0 0 0;color:var(--muted);line-height:1.45}
+.grid{display:grid;gap:18px}
+.grid-2{grid-template-columns:1.1fr .9fr}
+.card{background:#fff;border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:var(--shadow)}
+label{display:block;font-size:.85rem;font-weight:700;color:#334155;margin-bottom:8px}
+input[type=text], select, textarea{
+  width:100%; border:1px solid var(--border); border-radius:16px; padding:12px 14px;
+  font:inherit; color:var(--text); background:#fff;
+}
+textarea{min-height:260px; resize:vertical}
+button{
+  border:none;background:var(--dark);color:#fff;padding:11px 16px;border-radius:14px;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s ease, transform .15s ease
+}
+button:hover{opacity:.94;transform:translateY(-1px)}
+button.secondary{background:#fff;color:#334155;border:1px solid var(--border)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.notice{margin-top:16px;padding:12px 14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:.92rem;display:none}
+.notice.show{display:block}
+.helper{font-size:.9rem;color:var(--muted)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badge{display:inline-block;background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:.78rem;color:#334155}
+.table{width:100%;border-collapse:collapse;margin-top:12px}
+.table th,.table td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;font-size:.92rem;vertical-align:top}
+.table th{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.empty{padding:18px;border:1px dashed var(--border);border-radius:18px;color:var(--muted);background:#f8fafc}
+.small-cap{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.class-card{border:1px solid var(--border);border-radius:20px;padding:16px;background:#fff;box-shadow:var(--shadow)}
+.class-card.selected{box-shadow:0 0 0 2px #bbf7d0,var(--shadow);border-color:#a7f3d0}
+.class-title{font-size:1.05rem;font-weight:700;color:var(--dark)}
+.meta{font-size:.88rem;color:var(--muted);margin-top:4px}
+.list-grid{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.status-pill{background:#f8fafc;border:1px solid var(--border);border-radius:18px;padding:14px}
+.status-pill .label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px;font-weight:700}
+.status-pill .value{font-weight:700;color:var(--dark)}
+@media (max-width: 900px){
+  .grid-2,.list-grid{grid-template-columns:1fr}
+  .topbar-inner{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="title-wrap">
+      <p>Outil pédagogique</p>
+      <h1 class="title">Sélectionner la classe</h1>
+    </div>
+    <div class="toolbar" style="margin-top:0">
+      <button class="secondary" onclick="window.location.href='index.html'">Retour tableau de bord</button>
+      <button class="secondary" onclick="window.location.href='creation-classes.html'">Créer une classe</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="section">
+    <h2>Choisir la classe active</h2>
+    <p>Sélectionne une classe disponible. Le niveau et la classe active seront mémorisés pour le tableau de bord et les autres apps.</p>
+
+    <div class="grid" style="grid-template-columns:220px 1fr; margin-top:16px">
+      <div>
+        <label for="levelFilter">Niveau</label>
+        <select id="levelFilter" onchange="renderClasses()">
+          <option value="all">Tous les niveaux</option>
+          <option value="6e">6e</option>
+          <option value="5e">5e</option>
+          <option value="4e">4e</option>
+          <option value="3e">3e</option>
+        </select>
+      </div>
+      <div class="status-pill">
+        <span class="label">Classe active</span>
+        <span class="value" id="activeClassLabel">Aucune classe sélectionnée</span>
+      </div>
+    </div>
+
+    <div id="notice" class="notice"></div>
+  </section>
+
+  <section class="section">
+    <div class="small-cap">Classes disponibles</div>
+    <h3 style="margin-top:6px">Liste des classes enregistrées</h3>
+    <div id="classesArea" style="margin-top:16px"></div>
+  </section>
+</main>
+
+<script>
+const STORAGE_KEY = 'ecosystem_classes';
+const ACTIVE_CLASS_KEY = 'dashboard_active_class';
+const ACTIVE_LEVEL_KEY = 'dashboard_active_level';
+
+function showNotice(message){
+  const box = document.getElementById('notice');
+  box.textContent = message;
+  box.classList.add('show');
+  clearTimeout(window.__noticeTimer);
+  window.__noticeTimer = setTimeout(() => box.classList.remove('show'), 3200);
+}
+
+function getClasses(){
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+
+function getActiveClass(){
+  return localStorage.getItem(ACTIVE_CLASS_KEY) || '';
+}
+
+function renderHeader(){
+  const active = getActiveClass();
+  document.getElementById('activeClassLabel').textContent = active || 'Aucune classe sélectionnée';
+}
+
+function renderClasses(){
+  const area = document.getElementById('classesArea');
+  const level = document.getElementById('levelFilter').value;
+  const active = getActiveClass();
+  let classes = getClasses();
+  if(level !== 'all') classes = classes.filter(c => c.level === level);
+  classes.sort((a,b) => a.level.localeCompare(b.level) || a.name.localeCompare(b.name));
+
+  if(!classes.length){
+    area.innerHTML = '<div class="empty">Aucune classe disponible pour ce niveau.</div>';
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="list-grid">
+      ${classes.map(c => `
+        <div class="class-card ${active === c.name ? 'selected' : ''}">
+          <div class="small-cap">Niveau ${escapeHtml(c.level)}</div>
+          <div class="class-title" style="margin-top:6px">${escapeHtml(c.name)}</div>
+          <div class="meta">${c.students.length} élève(s)</div>
+          <div class="toolbar">
+            <button onclick="selectClass('${escapeJs(c.name)}','${escapeJs(c.level)}')">Sélectionner</button>
+            <button class="secondary" onclick="previewClass('${c.id}')">Voir les élèves</button>
+          </div>
+          <div id="preview-${c.id}" style="margin-top:12px; display:none"></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectClass(name, level){
+  localStorage.setItem(ACTIVE_CLASS_KEY, name);
+  localStorage.setItem(ACTIVE_LEVEL_KEY, level);
+  renderHeader();
+  renderClasses();
+  showNotice('Classe active : ' + name);
+}
+
+function previewClass(id){
+  const found = getClasses().find(c => c.id === id);
+  if(!found) return;
+  const box = document.getElementById('preview-' + id);
+  if(box.style.display === 'block') {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = `
+    <table class="table">
+      <thead><tr><th>Nom prénom</th><th>Table</th><th>Besoins</th></tr></thead>
+      <tbody>
+        ${found.students.map(s => `
+          <tr>
+            <td>${escapeHtml(s.fullname)}</td>
+            <td>${escapeHtml(s.table || '')}</td>
+            <td>${(s.needs||[]).length ? (s.needs||[]).map(n => `<span class="badge">${escapeHtml(n)}</span>`).join(' ') : '<span class="helper">—</span>'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+function escapeJs(str){
+  return String(str).replace(/'/g, "\\'");
+}
+
+renderHeader();
+renderClasses();
+</script>
+</body>
+</html>

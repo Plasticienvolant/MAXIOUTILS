@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord – Écosystème pédagogique</title>
+  <style>
+    :root{
+      --bg:#f1f5f9; --card:#ffffff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+      --shadow:0 2px 10px rgba(15,23,42,.06);
+      --blue:#2563eb; --blue-soft:#dbeafe;
+      --slate:#475569; --slate-soft:#e2e8f0;
+      --green:#059669; --green-soft:#d1fae5;
+      --amber:#d97706; --amber-soft:#fef3c7;
+      --violet:#7c3aed; --violet-soft:#ede9fe;
+      --dark:#0f172a; --hover:#f8fafc;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .app{min-height:100vh}
+    .topbar{background:#fff;border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .title-wrap p{margin:0 0 6px 0;font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+    .title{font-size:1.25rem;font-weight:700;margin:0;color:var(--dark)}
+    .container{max-width:1280px;margin:0 auto;padding:32px 24px 48px}
+    .section{background:#fff;border:1px solid var(--border);border-radius:28px;padding:24px;box-shadow:var(--shadow);margin-bottom:24px}
+    .section h2,.section h3,.section h4{margin:0;color:var(--dark)}
+    .section p{margin:8px 0 0 0;color:var(--muted);line-height:1.45}
+    .small-cap{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .layout{display:grid;gap:24px;grid-template-columns:1fr 1.15fr 1fr}
+    .stack{display:flex;flex-direction:column;gap:16px}
+    .phase{border-radius:22px;padding:16px}
+    .phase.blue{background:var(--blue-soft);border:1px solid #bfdbfe}
+    .phase.green{background:var(--green-soft);border:1px solid #a7f3d0}
+    .phase.amber{background:var(--amber-soft);border:1px solid #fde68a}
+    .phase.violet{background:var(--violet-soft);border:1px solid #ddd6fe}
+    .phase-title{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px 0}
+    .phase.blue .phase-title{color:#1d4ed8}
+    .phase.green .phase-title{color:#047857}
+    .phase.amber .phase-title{color:#b45309}
+    .phase.violet .phase-title{color:#6d28d9}
+
+    .module-card, .info-card, .flow-card {
+      background:#fff;border:1px solid var(--border);border-radius:22px;padding:16px;box-shadow:var(--shadow)
+    }
+    .module-card{display:block;text-decoration:none;color:inherit;transition:transform .15s ease, box-shadow .15s ease, background .15s ease;cursor:pointer}
+    .module-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,23,42,.08);background:#fcfdff}
+    .module-card.disabled{cursor:not-allowed;opacity:.96}
+    .module-card .icon{font-size:1.35rem}
+    .module-card h3,.module-card h4{margin-top:8px}
+    .module-card p{font-size:.94rem}
+
+    .center-shell{background:#f8fafc;border:1px solid var(--border);border-radius:28px;padding:20px}
+    .pivot{background:#fff;border:1px solid #cbd5e1;border-radius:26px;padding:20px;box-shadow:var(--shadow);box-shadow:0 0 0 2px #e2e8f0,var(--shadow)}
+    .pivot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .muted-box{background:#f8fafc;border:1px solid var(--border);border-radius:18px;padding:12px;font-size:.92rem;color:#334155}
+    .teaching-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .full-span{grid-column:1 / -1}
+    .featured{box-shadow:0 0 0 2px #bbf7d0,var(--shadow)}
+    .flows-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+    .flow-card{font-size:.93rem;color:#334155}
+    .flow-card strong{color:#0f172a}
+    .statusbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+    .status-pill{background:#f8fafc;border:1px solid var(--border);border-radius:18px;padding:14px}
+    .status-pill .label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px;font-weight:700}
+    .status-pill .value{font-weight:700;color:var(--dark)}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .toolbar button{
+      border:none;background:var(--dark);color:#fff;padding:10px 14px;border-radius:14px;
+      font-size:.92rem;font-weight:700;cursor:pointer;transition:opacity .15s ease, transform .15s ease
+    }
+    .toolbar button.secondary{background:#fff;color:#334155;border:1px solid var(--border)}
+    .toolbar button:hover{opacity:.94;transform:translateY(-1px)}
+    .helper{margin-top:10px;font-size:.88rem;color:var(--muted)}
+    .notice{margin-top:16px;padding:12px 14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:.92rem;display:none}
+    .notice.show{display:block}
+    @media (max-width: 1100px){
+      .layout{grid-template-columns:1fr}
+      .flows-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 760px){
+      .topbar-inner{flex-direction:column;align-items:flex-start}
+      .pivot-grid,.teaching-grid,.statusbar,.flows-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="title-wrap">
+        <p>Outil pédagogique</p>
+        <h1 class="title">Tableau de bord</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <h2>Temporalité du travail pédagogique</h2>
+      <p>Les applications suivent le déroulement réel du travail de l’enseignant : avant, pendant et après la classe.</p>
+
+      <div class="statusbar">
+        <div class="status-pill">
+          <span class="label">Classe active</span>
+          <span class="value" id="active-class">Aucune classe sélectionnée</span>
+        </div>
+        <div class="status-pill">
+          <span class="label">Fiche active</span>
+          <span class="value" id="active-sheet">Aucune fiche sélectionnée</span>
+        </div>
+        <div class="status-pill">
+          <span class="label">Références actives</span>
+          <span class="value" id="active-refs">Aucune référence sélectionnée</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="secondary" onclick="setStateValue('active-class','6e B')">Démo : classe 6e B</button>
+        <button class="secondary" onclick="setStateValue('active-sheet','Image, espace, spectateur')">Démo : fiche active</button>
+        <button class="secondary" onclick="setStateValue('active-refs','Alex Webb / Hopper / Tati')">Démo : références</button>
+        <button onclick="clearState()">Réinitialiser</button>
+      </div>
+
+      <div class="helper">Les modules ouvrent une page seulement si le chemin exact est renseigné dans la configuration des liens. Sinon, un message s’affiche à la place d’une erreur 404.</div>
+      <div class="notice" id="notice"></div>
+    </section>
+
+    <section class="section">
+      <div class="small-cap">Vue hybride</div>
+      <h2 style="margin-top:6px">Architecture générale et cœur du système</h2>
+      <p>La fiche de cours est le pivot. Les autres applications s’organisent avant, pendant et après la classe autour d’elle.</p>
+
+      <div class="layout" style="margin-top:22px">
+        <div class="stack">
+          <div class="phase blue">
+            <div class="phase-title">Avant la classe</div>
+            <a class="module-card" href="#" data-link-key="creer_classes">
+              <div class="icon">🏫</div>
+              <h3>Créer les classes</h3>
+              <p>Structure les élèves, profils et besoins.</p>
+            </a>
+            <div style="height:10px"></div>
+            <a class="module-card" href="#" data-link-key="selectionner_classe">
+              <div class="icon">🎯</div>
+              <h3>Sélectionner la classe</h3>
+              <p>Active la classe concernée pour la préparation.</p>
+            </a>
+          </div>
+
+          <div class="phase amber">
+            <div class="phase-title">Après la classe</div>
+            <a class="module-card" href="#" data-link-key="synthese_eleves">
+              <div class="icon">📊</div>
+              <h3>Synthèse élèves</h3>
+              <p>Transforme les traces du suivi en lecture pédagogique.</p>
+            </a>
+            <div style="height:10px"></div>
+            <a class="module-card" href="#" data-link-key="appreciations">
+              <div class="icon">✍️</div>
+              <h3>Appréciations</h3>
+              <p>Produit une formulation exploitable et exportable.</p>
+            </a>
+            <div style="height:10px"></div>
+            <a class="module-card" href="#" data-link-key="progression">
+              <div class="icon">📈</div>
+              <h3>Progression</h3>
+              <p>Relie les fiches et la classe à la progression annuelle.</p>
+            </a>
+          </div>
+        </div>
+
+        <div class="center-shell">
+          <div class="pivot">
+            <div class="small-cap">Noyau central</div>
+            <div style="display:flex;gap:14px;align-items:flex-start;margin-top:10px">
+              <div style="font-size:2rem">📄</div>
+              <div>
+                <h3 style="font-size:1.3rem">Fiche de cours</h3>
+                <p>Fiche institutionnelle pivot alimentée par la classe sélectionnée et le fichier Excel.</p>
+              </div>
+            </div>
+            <div class="pivot-grid">
+              <div class="muted-box">Reçoit : fichier Excel, classe sélectionnée</div>
+              <div class="muted-box">Transmet : réservoir, références, mon cours, suivi, tableau, progression</div>
+            </div>
+            <div class="toolbar">
+              <button onclick="setStateValue('active-sheet','Fiche de cours sélectionnée')">Sélectionner cette fiche</button>
+              <button class="secondary" onclick="notifyTransfer('Fiche de cours','Réservoir de fiches')">Verser dans le réservoir</button>
+            </div>
+          </div>
+
+          <div class="section" style="margin:16px 0 0 0;padding:20px;box-shadow:none">
+            <div class="small-cap">Mon enseignement</div>
+            <div class="teaching-grid">
+              <a class="module-card" href="#" data-link-key="conception_cours">
+                <div class="icon">🧠</div>
+                <h4>Conception du cours</h4>
+                <p>Lieu de pensée pédagogique, nourri par les textes et objectifs.</p>
+              </a>
+              <a class="module-card" href="#" data-link-key="reservoir_fiches">
+                <div class="icon">🗂️</div>
+                <h4>Réservoir de fiches</h4>
+                <p>Stocke et permet de re-sélectionner une fiche déjà prête.</p>
+              </a>
+              <a class="module-card full-span" href="#" data-link-key="fiche_references">
+                <div class="icon">🖼️</div>
+                <h4>Fiche de références</h4>
+                <p>Construit et transmet les références vers l’accompagnement du cours.</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="phase green">
+            <div class="phase-title">En classe</div>
+            <a class="module-card" href="#" data-link-key="mon_cours">
+              <div class="icon">🗣️</div>
+              <h3>Mon cours</h3>
+              <p>Ce que l’enseignant dit, écrit, montre et fait circuler.</p>
+            </a>
+            <div style="height:10px"></div>
+            <a class="module-card featured" href="#" data-link-key="suivi_cours">
+              <div class="icon">👥</div>
+              <h3>Suivi de cours</h3>
+              <p>Le cœur du terrain : positionnement et observation des élèves.</p>
+            </a>
+            <div style="height:10px"></div>
+            <a class="module-card" href="#" data-link-key="tableau_cours">
+              <div class="icon">🧲</div>
+              <h3>Tableau de cours</h3>
+              <p>Affiche et organise visiblement les éléments utiles à la séance.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <div>
+          <h2>Flux entre les applications</h2>
+          <p>Lecture transversale des transmissions d’informations.</p>
+        </div>
+        <div class="small-cap" style="background:#f8fafc;border:1px solid var(--border);padding:8px 12px;border-radius:999px">Vue simplifiée</div>
+      </div>
+
+      <div class="flows-grid">
+        <div class="flow-card"><strong>Créer les classes</strong> → Sélectionner la classe</div>
+        <div class="flow-card"><strong>Sélectionner la classe</strong> → Fiche de cours</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Réservoir de fiches</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Fiche de références</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Mon cours</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Suivi de cours</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Tableau de cours</div>
+        <div class="flow-card"><strong>Fiche de références</strong> → Mon cours</div>
+        <div class="flow-card"><strong>Suivi de cours</strong> → Synthèse élèves</div>
+        <div class="flow-card"><strong>Synthèse élèves</strong> → Appréciations</div>
+        <div class="flow-card"><strong>Réservoir de fiches</strong> → Progression</div>
+        <div class="flow-card"><strong>Fiche de cours</strong> → Progression</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const storageKeys = {
+    class: "dashboard_active_class",
+    sheet: "dashboard_active_sheet",
+    refs: "dashboard_active_refs",
+  };
+
+  // Renseigne ici les VRAIS chemins GitHub Pages / noms de fichiers.
+  // Tant qu'une valeur reste vide, aucun 404 : un message s'affiche à la place.
+  const appLinks = {
+    creer_classes: "creation-classes.html",
+    selectionner_classe: "selection-classe.html",
+    conception_cours: "app_creation.html",
+    fiche_cours: "app_fusion.html",
+    reservoir_fiches: "app_reservoir.html",
+    fiche_references: "app_references.html",
+    mon_cours: "",
+    suivi_cours: "app_suivi.html",
+    tableau_cours: "",
+    synthese_eleves: "",
+    appreciations: "",
+    progression: ""
+  };
+
+  function showNotice(message){
+    const box = document.getElementById("notice");
+    box.textContent = message;
+    box.classList.add("show");
+    clearTimeout(window.__noticeTimer);
+    window.__noticeTimer = setTimeout(() => box.classList.remove("show"), 3500);
+  }
+
+  function setStateValue(type, value){
+    if(type === "active-class"){
+      localStorage.setItem(storageKeys.class, value);
+      document.getElementById("active-class").textContent = value;
+    }
+    if(type === "active-sheet"){
+      localStorage.setItem(storageKeys.sheet, value);
+      document.getElementById("active-sheet").textContent = value;
+    }
+    if(type === "active-refs"){
+      localStorage.setItem(storageKeys.refs, value);
+      document.getElementById("active-refs").textContent = value;
+    }
+    showNotice("État mis à jour.");
+  }
+
+  function clearState(){
+    localStorage.removeItem(storageKeys.class);
+    localStorage.removeItem(storageKeys.sheet);
+    localStorage.removeItem(storageKeys.refs);
+    loadState();
+    showNotice("États réinitialisés.");
+  }
+
+  function loadState(){
+    document.getElementById("active-class").textContent =
+      localStorage.getItem(storageKeys.class) || "Aucune classe sélectionnée";
+    document.getElementById("active-sheet").textContent =
+      localStorage.getItem(storageKeys.sheet) || "Aucune fiche sélectionnée";
+    document.getElementById("active-refs").textContent =
+      localStorage.getItem(storageKeys.refs) || "Aucune référence sélectionnée";
+  }
+
+  function notifyTransfer(source, target){
+    showNotice("Transmission simulée : " + source + " → " + target);
+  }
+
+  function goToApp(key, label){
+    const url = appLinks[key];
+    if(!url || url.trim() === "" || url.trim() === "#"){
+      showNotice("Lien non renseigné pour « " + label + " ». Remplis son chemin dans appLinks.");
+      return;
+    }
+    window.location.href = url;
+  }
+
+  function bindModuleLinks(){
+    document.querySelectorAll("[data-link-key]").forEach((el) => {
+      const key = el.getAttribute("data-link-key");
+      const label = el.querySelector("h3, h4")?.textContent || key;
+      const configured = appLinks[key] && appLinks[key].trim() !== "" && appLinks[key].trim() !== "#";
+
+      if(!configured){
+        el.classList.add("disabled");
+      }
+
+      el.addEventListener("click", function(e){
+        e.preventDefault();
+        goToApp(key, label);
+      });
+    });
+  }
+
+  loadState();
+  bindModuleLinks();
+</script>
+</body>
+</html>
