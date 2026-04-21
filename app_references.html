@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Création de références</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#f6f7fb;--card:#fff;--line:#d9deea;--ink:#1d2433;--muted:#647089;--accent:#2e5bff;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  h1{margin:0 0 6px 0;font-size:24px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{padding:18px;max-width:1600px;margin:auto}
+  .layout{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .toolbar,.grid,.grid2,.grid3{display:grid;gap:12px}
+  .toolbar{grid-template-columns:1.2fr auto auto auto;align-items:end;margin-bottom:14px}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  h2{margin:0 0 12px 0;font-size:18px}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,select,textarea,button{font:inherit}
+  input,select,textarea{width:100%;padding:12px 13px;border-radius:12px;border:1px solid #cfd6e4;background:#fff;min-height:48px}
+  textarea{min-height:110px;resize:vertical}
+  button{padding:13px 16px;border:none;border-radius:12px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;min-height:48px}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  button.warn{background:#1d2433}
+  .status{padding:10px 12px;border-radius:10px;background:#eef3ff;border:1px solid #d9e3ff;color:#2847a1;margin-bottom:12px;min-height:42px}
+  .list{display:grid;gap:10px;max-height:72vh;overflow:auto}
+  .item{border:1px solid var(--line);border-left:8px solid #2e5bff;background:#fff;border-radius:14px;padding:12px;cursor:pointer}
+  .item:hover{background:#f9fbff}
+  .item.active{box-shadow:0 0 0 2px rgba(46,91,255,.12)}
+  .meta{font-size:12px;color:var(--muted);margin-top:4px}
+  .helper{font-size:12px;color:var(--muted);margin-top:4px}
+  .pillbox{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{background:#eef3ff;border:1px solid #d9e3ff;padding:5px 9px;border-radius:999px;font-size:12px}
+  .smallTitle{font-size:13px;font-weight:700;margin:0 0 8px 0}
+  @media (max-width: 1100px){.layout{grid-template-columns:1fr}.toolbar,.grid,.grid2,.grid3{grid-template-columns:1fr}}
+  @media (max-width: 900px){body{font-size:17px} h1{font-size:28px} h2{font-size:21px} .wrap{padding:14px} .card{padding:18px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Création de références</h1>
+  <div class="sub">Ajouter des œuvres dans l’onglet <b>Oeuvres</b> du classeur, sans passer par Excel à la main.</div>
+</header>
+
+<div class="wrap">
+  <div id="status" class="status">Chargez d’abord votre classeur Excel.</div>
+
+  <div class="toolbar">
+    <div>
+      <label>Classeur Excel</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </div>
+    <button type="button" class="secondary" id="newBtn">Nouvelle référence</button>
+    <button type="button" id="saveBtn">Enregistrer</button>
+    <button type="button" class="warn" id="downloadBtn">Télécharger le classeur</button>
+  </div>
+
+  <div class="layout">
+    <aside class="card">
+      <h2>Références existantes</h2>
+      <div class="grid2" style="margin-bottom:12px">
+        <div>
+          <label>Cycle</label>
+          <select id="filterCycle"></select>
+        </div>
+        <div>
+          <label>Domaine</label>
+          <input id="filterDomaine" placeholder="photo, peinture, cinéma..." />
+        </div>
+      </div>
+      <div>
+        <label>Recherche</label>
+        <input id="searchInput" placeholder="artiste, titre, questionnement..." />
+      </div>
+      <div class="helper" style="margin-bottom:10px">Cliquer sur une référence pour la relire ou la modifier.</div>
+      <div id="referenceList" class="list"></div>
+    </aside>
+
+    <main>
+      <div class="card">
+        <h2>1. Identification</h2>
+        <div class="grid">
+          <div>
+            <label>ID œuvre</label>
+            <input id="ID_oeuvre" placeholder="Généré automatiquement" />
+          </div>
+          <div>
+            <label>Artiste</label>
+            <input id="Artiste" />
+          </div>
+          <div style="grid-column: span 2">
+            <label>Titre</label>
+            <input id="Titre" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="Date" placeholder="ex. 1981 ou vers 1650" />
+          </div>
+          <div>
+            <label>Époque</label>
+            <input id="Epoque" placeholder="Renaissance, XIXe, contemporain..." />
+          </div>
+          <div>
+            <label>Domaine</label>
+            <input id="Domaine" placeholder="Photographie, peinture, cinéma..." />
+          </div>
+          <div>
+            <label>Nature de l’œuvre</label>
+            <input id="Nature_oeuvre" placeholder="photographie, installation..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2. Catégorisation pédagogique</h2>
+        <div class="grid">
+          <div>
+            <label>Cycle</label>
+            <select id="Cycle"></select>
+          </div>
+          <div>
+            <label>Axe</label>
+            <select id="Axe"></select>
+          </div>
+          <div style="grid-column: span 2">
+            <label>Questionnement principal</label>
+            <select id="Questionnement_principal"></select>
+          </div>
+        </div>
+        <div class="helper">Les menus d’axe et de questionnement suivent la structure déjà utilisée dans les fiches de cours.</div>
+      </div>
+
+      <div class="card">
+        <h2>3. Techniques, analyse et source</h2>
+        <div class="grid2">
+          <div>
+            <label>Technique 1</label>
+            <input id="Technique_1" />
+          </div>
+          <div>
+            <label>Technique 2</label>
+            <input id="Technique_2" />
+          </div>
+          <div>
+            <label>Chemin / lien fichier</label>
+            <input id="Chemin_fichier" placeholder="URL, chemin Drive, note..." />
+          </div>
+          <div>
+            <label>Source</label>
+            <input id="Source" placeholder="musée, site, manuel..." />
+          </div>
+          <div style="grid-column: span 2">
+            <label>Analyse courte</label>
+            <textarea id="Analyse_courte" placeholder="Quelques lignes pour caractériser l’œuvre, son intérêt pédagogique ou esthétique."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>4. Aide rapide</h2>
+        <div class="pillbox" id="resumeBox"></div>
+        <div class="grid2" style="margin-top:12px">
+          <button type="button" class="secondary" id="reuseBtn">Réutiliser cycle / axe / questionnement précédents</button>
+          <button type="button" class="secondary" id="clearSearchBtn">Effacer les filtres</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const PROGRAM_DATA = {
+  "Cycle 3": {
+    axes: {
+      "La représentation plastique et les dispositifs de présentation": [
+        "La ressemblance",
+        "L’autonomie du geste graphique, pictural, sculptural",
+        "Les différentes catégories d’images, leurs procédés de fabrication, leurs transformations",
+        "La narration visuelle",
+        "La mise en regard et en espace",
+        "La prise en compte du spectateur, de l’effet recherché"
+      ],
+      "Les fabrications et la relation entre l’objet et l’espace": [
+        "L’hétérogénéité et la cohérence plastiques",
+        "L’invention, la fabrication, les détournements, les mises en scène des objets",
+        "L’espace en trois dimensions"
+      ],
+      "La matérialité de la production plastique et la sensibilité aux constituants de l’œuvre": [
+        "La réalité concrète d’une production ou d’une œuvre",
+        "Les qualités physiques des matériaux",
+        "Les effets du geste et de l’instrument",
+        "La matérialité et la qualité de la couleur"
+      ]
+    }
+  },
+  "Cycle 4": {
+    axes: {
+      "La représentation ; images, réalité et fiction": [
+        "La ressemblance",
+        "Le dispositif de représentation",
+        "La narration visuelle",
+        "L’autonomie de l’œuvre d’art, les modalités de son autoréférenciation",
+        "La création, la matérialité, le statut, la signification des images",
+        "La conception, la production et la diffusion de l’œuvre plastique à l’ère du numérique"
+      ],
+      "La matérialité de l’œuvre ; l’objet et l’œuvre": [
+        "La transformation de la matière",
+        "Les qualités physiques des matériaux",
+        "La matérialité et la qualité de la couleur",
+        "L’objet comme matériau en art",
+        "Les représentations et statuts de l’objet en art",
+        "Le numérique en tant que processus et matériau artistiques"
+      ],
+      "L’œuvre, l’espace, l’auteur, le spectateur": [
+        "La relation du corps à la production artistique",
+        "La présence matérielle de l’œuvre dans l’espace, la présentation de l’œuvre",
+        "L’expérience sensible de l’espace de l’œuvre",
+        "Les métissages entre arts plastiques et technologies numériques"
+      ]
+    }
+  }
+};
+
+const OEUVRES_HEADERS = [
+  'ID_oeuvre','Artiste','Titre','Domaine','Nature_oeuvre','Epoque','Date',
+  'Technique_1','Technique_2','Cycle','Axe','Questionnement_principal',
+  'Analyse_courte','Chemin_fichier','Source'
+];
+
+let workbook = null;
+let workbookName = 'classeur_noyau_fiche_de_cours.xlsx';
+let sheetsData = {};
+let currentId = '';
+let lastPedagoChoice = null;
+
+function byId(id){ return document.getElementById(id); }
+function setStatus(msg){ byId('status').textContent = msg; }
+function normalize(v){ return (v ?? '').toString().trim(); }
+function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
+
+function rowsFromSheet(name){ return sheetsData[name] || []; }
+function optionize(select, values, placeholder=''){
+  select.innerHTML='';
+  const o = document.createElement('option');
+  o.value=''; o.textContent=placeholder || '—';
+  select.appendChild(o);
+  values.forEach(v=>{
+    const op=document.createElement('option');
+    op.value=v; op.textContent=v;
+    select.appendChild(op);
+  });
+}
+
+function initFilters(){
+  optionize(byId('filterCycle'), ['Cycle 3','Cycle 4'], 'Tous');
+  optionize(byId('Cycle'), ['Cycle 3','Cycle 4'], 'Choisir');
+  optionize(byId('Axe'), [], 'Choisir un cycle');
+  optionize(byId('Questionnement_principal'), [], 'Choisir un axe');
+  renderResume();
+}
+
+function refreshPedagoSelectors(preserve=true){
+  const cycle = byId('Cycle').value;
+  const oldAxe = byId('Axe').value;
+  const oldQ = byId('Questionnement_principal').value;
+  const axes = Object.keys(PROGRAM_DATA[cycle]?.axes || {});
+  optionize(byId('Axe'), axes, cycle ? 'Choisir' : 'Choisir un cycle');
+  if(preserve && axes.includes(oldAxe)) byId('Axe').value = oldAxe;
+  const qs = PROGRAM_DATA[cycle]?.axes?.[byId('Axe').value] || [];
+  optionize(byId('Questionnement_principal'), qs, byId('Axe').value ? 'Choisir' : 'Choisir un axe');
+  if(preserve && qs.includes(oldQ)) byId('Questionnement_principal').value = oldQ;
+  renderResume();
+}
+
+function refreshQuestionnements(preserve=true){
+  const cycle = byId('Cycle').value;
+  const axe = byId('Axe').value;
+  const oldQ = byId('Questionnement_principal').value;
+  const qs = PROGRAM_DATA[cycle]?.axes?.[axe] || [];
+  optionize(byId('Questionnement_principal'), qs, axe ? 'Choisir' : 'Choisir un axe');
+  if(preserve && qs.includes(oldQ)) byId('Questionnement_principal').value = oldQ;
+  renderResume();
+}
+
+function parseWorkbook(arrayBuffer){
+  workbook = XLSX.read(arrayBuffer, {type:'array'});
+  sheetsData = {};
+  workbook.SheetNames.forEach(name=>{
+    sheetsData[name] = XLSX.utils.sheet_to_json(workbook.Sheets[name], {defval:''});
+  });
+  renderList();
+  clearForm();
+}
+
+function generateId(){
+  const ids = rowsFromSheet('Oeuvres').map(r=>normalize(r.ID_oeuvre)).filter(Boolean);
+  let max = 0;
+  ids.forEach(id=>{
+    const m = id.match(/(\d+)/);
+    if(m) max = Math.max(max, parseInt(m[1],10));
+  });
+  return `OEUVRE_${String(max+1).padStart(4,'0')}`;
+}
+
+function clearForm(){
+  OEUVRES_HEADERS.forEach(h=>{ if(byId(h)) byId(h).value=''; });
+  currentId = '';
+  byId('ID_oeuvre').value = generateId();
+  if(lastPedagoChoice){
+    byId('Cycle').value = lastPedagoChoice.Cycle || '';
+    refreshPedagoSelectors(false);
+    byId('Axe').value = lastPedagoChoice.Axe || '';
+    refreshQuestionnements(false);
+    byId('Questionnement_principal').value = lastPedagoChoice.Questionnement_principal || '';
+  } else {
+    byId('Cycle').value = '';
+    refreshPedagoSelectors(false);
+  }
+  renderResume();
+  markActiveCard('');
+}
+
+function fillForm(row){
+  currentId = row.ID_oeuvre || '';
+  OEUVRES_HEADERS.forEach(h=>{ if(byId(h)) byId(h).value = row[h] || ''; });
+  refreshPedagoSelectors(false);
+  byId('Cycle').value = row.Cycle || '';
+  refreshPedagoSelectors(false);
+  byId('Axe').value = row.Axe || '';
+  refreshQuestionnements(false);
+  byId('Questionnement_principal').value = row.Questionnement_principal || '';
+  lastPedagoChoice = {
+    Cycle: byId('Cycle').value,
+    Axe: byId('Axe').value,
+    Questionnement_principal: byId('Questionnement_principal').value
+  };
+  renderResume();
+  markActiveCard(currentId);
+}
+
+function collectData(){
+  const out = {};
+  OEUVRES_HEADERS.forEach(h=> out[h] = byId(h) ? byId(h).value : '');
+  out.ID_oeuvre = byId('ID_oeuvre').value || generateId();
+  return out;
+}
+
+function saveToWorkbook(){
+  if(!workbook){ setStatus('Chargez d’abord un classeur.'); return; }
+  const data = collectData();
+  if(!normalize(data.Artiste) && !normalize(data.Titre)){ setStatus('Renseignez au moins l’artiste ou le titre.'); return; }
+  currentId = data.ID_oeuvre;
+  lastPedagoChoice = {
+    Cycle: data.Cycle,
+    Axe: data.Axe,
+    Questionnement_principal: data.Questionnement_principal
+  };
+
+  let rows = rowsFromSheet('Oeuvres').filter(r=>Object.values(r).some(v=>normalize(v)));
+  const idx = rows.findIndex(r=>normalize(r.ID_oeuvre)===data.ID_oeuvre);
+  if(idx >= 0) rows[idx] = {...rows[idx], ...data};
+  else rows.push(data);
+
+  sheetsData['Oeuvres'] = rows;
+  workbook.Sheets['Oeuvres'] = XLSX.utils.json_to_sheet(rows, {header: OEUVRES_HEADERS});
+  renderList();
+  markActiveCard(data.ID_oeuvre);
+  setStatus(`Référence ${data.ID_oeuvre} enregistrée dans l’onglet Oeuvres. Téléchargez ensuite le classeur mis à jour.`);
+}
+
+function downloadWorkbook(){
+  if(!workbook){ setStatus('Aucun classeur chargé.'); return; }
+  XLSX.writeFile(workbook, workbookName.replace(/\.xlsx?$/i,'') + '_maj.xlsx');
+  setStatus('Téléchargement du classeur lancé.');
+}
+
+function renderList(){
+  const box = byId('referenceList');
+  const cycle = byId('filterCycle').value;
+  const domaine = normalize(byId('filterDomaine').value).toLowerCase();
+  const search = normalize(byId('searchInput').value).toLowerCase();
+
+  let rows = rowsFromSheet('Oeuvres').filter(r=>normalize(r.ID_oeuvre));
+  if(cycle) rows = rows.filter(r=>normalize(r.Cycle)===cycle);
+  if(domaine) rows = rows.filter(r=>(normalize(r.Domaine)+' '+normalize(r.Nature_oeuvre)).toLowerCase().includes(domaine));
+  if(search){
+    rows = rows.filter(r=>{
+      const blob = [
+        r.ID_oeuvre,r.Artiste,r.Titre,r.Domaine,r.Nature_oeuvre,r.Epoque,
+        r.Date,r.Cycle,r.Axe,r.Questionnement_principal,r.Analyse_courte
+      ].map(normalize).join(' ').toLowerCase();
+      return blob.includes(search);
+    });
+  }
+
+  rows = rows.slice().reverse();
+  box.innerHTML = rows.length ? '' : '<div class="helper">Aucune référence à afficher.</div>';
+  rows.forEach(r=>{
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.dataset.id = r.ID_oeuvre;
+    el.innerHTML = `
+      <div><b>${escapeHtml(r.ID_oeuvre || '')}</b> — ${escapeHtml(r.Artiste || 'Sans artiste')}</div>
+      <div style="margin-top:4px">${escapeHtml(r.Titre || 'Sans titre')}</div>
+      <div class="meta">${escapeHtml([r.Cycle, r.Domaine, r.Questionnement_principal].filter(Boolean).join(' • '))}</div>
+    `;
+    el.addEventListener('click', ()=>fillForm(r));
+    box.appendChild(el);
+  });
+}
+
+function markActiveCard(id){
+  document.querySelectorAll('.item').forEach(el=>{
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+}
+
+function renderResume(){
+  const values = [
+    byId('ID_oeuvre').value ? `ID : ${byId('ID_oeuvre').value}` : '',
+    byId('Cycle').value,
+    byId('Axe').value,
+    byId('Questionnement_principal').value,
+    byId('Domaine').value ? `Domaine : ${byId('Domaine').value}` : ''
+  ].filter(Boolean);
+  byId('resumeBox').innerHTML = values.length
+    ? values.map(v=>`<span class="pill">${escapeHtml(v)}</span>`).join('')
+    : '<span class="helper">Les choix principaux apparaîtront ici.</span>';
+}
+
+byId('fileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  workbookName = file.name;
+  const buffer = await file.arrayBuffer();
+  parseWorkbook(buffer);
+  setStatus(`Classeur chargé : ${file.name}`);
+});
+
+byId('Cycle').addEventListener('change', ()=>refreshPedagoSelectors(false));
+byId('Axe').addEventListener('change', ()=>refreshQuestionnements(false));
+['ID_oeuvre','Domaine','Cycle','Axe','Questionnement_principal'].forEach(id=>{
+  byId(id).addEventListener('input', renderResume);
+  byId(id).addEventListener('change', renderResume);
+});
+
+byId('newBtn').addEventListener('click', ()=>{
+  clearForm();
+  setStatus('Nouvelle référence prête.');
+});
+
+byId('saveBtn').addEventListener('click', saveToWorkbook);
+byId('downloadBtn').addEventListener('click', downloadWorkbook);
+
+byId('reuseBtn').addEventListener('click', ()=>{
+  if(!lastPedagoChoice){ setStatus('Aucun choix précédent à réutiliser pour le moment.'); return; }
+  byId('Cycle').value = lastPedagoChoice.Cycle || '';
+  refreshPedagoSelectors(false);
+  byId('Axe').value = lastPedagoChoice.Axe || '';
+  refreshQuestionnements(false);
+  byId('Questionnement_principal').value = lastPedagoChoice.Questionnement_principal || '';
+  renderResume();
+  setStatus('Les choix pédagogiques précédents ont été réappliqués.');
+});
+
+['filterCycle','filterDomaine','searchInput'].forEach(id=>{
+  byId(id).addEventListener('input', renderList);
+  byId(id).addEventListener('change', renderList);
+});
+
+byId('clearSearchBtn').addEventListener('click', ()=>{
+  byId('filterCycle').value='';
+  byId('filterDomaine').value='';
+  byId('searchInput').value='';
+  renderList();
+});
+
+initFilters();
+clearForm();
+</script>
+</body>
+</html>
