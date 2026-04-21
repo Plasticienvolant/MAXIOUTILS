@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#d7deea;--accent:#111827}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:22px 18px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 18px}
+    h1{margin:0 0 6px 0;font-size:28px} p{margin:0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:26px}
+    .tile{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 8px 20px rgba(0,0,0,.05);min-height:180px;transition:.15s transform,.15s box-shadow}
+    .tile:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(0,0,0,.08)}
+    .tile h2{margin:0 0 10px 0;font-size:22px}.tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1d4ed8;font-weight:700;font-size:12px;margin-bottom:14px}
+    .small{margin-top:12px;font-size:13px;color:var(--muted)}
+    .info{margin-top:28px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap" style="padding:0 18px;max-width:1200px;">
+      <h1>Tableau de bord</h1>
+      <p>Accueil général des applications. Chaque outil est désormais séparé pour éviter d’écraser la page de départ.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="grid">
+      <a class="tile" href="creation-classes.html">
+        <div class="tag">Nouveau</div>
+        <h2>Création de classes</h2>
+        <p>Créer les classes, renseigner les élèves, numéro de table et besoins particuliers : ULIS, Dys, PAP, PAI, PPRE, FLE, SEGPA-Inclus.</p>
+        <div class="small">Cette page sert de base mémoire pour les autres apps.</div>
+      </a>
+
+      <a class="tile" href="suivi-classe.html">
+        <div class="tag">Suivi</div>
+        <h2>Suivi de classe</h2>
+        <p>Suivi en classe, positionnement par compétences, statuts rapides, synthèse par table et bilan de séance.</p>
+        <div class="small">Récupère automatiquement les données enregistrées dans la création de classes.</div>
+      </a>
+
+      <a class="tile" href="#" onclick="alert('Tuile réservée pour une future app.');return false;">
+        <div class="tag">Réserve</div>
+        <h2>Autre application</h2>
+        <p>Tuile laissée volontairement pour accueillir plus tard une autre app : fiches de cours, évaluations, ou tableau de consignes.</p>
+        <div class="small">On pourra la relier plus tard sans toucher à l’accueil.</div>
+      </a>
+    </section>
+
+    <section class="info">
+      <strong>Organisation conseillée sur GitHub :</strong>
+      <p style="margin-top:8px">garder cette page comme entrée principale, puis ajouter les autres apps sous forme de fichiers séparés dans le même dépôt.</p>
+    </section>
+  </main>
+</body>
+</html>

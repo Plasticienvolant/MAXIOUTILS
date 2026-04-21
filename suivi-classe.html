@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suivi de classe</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#d7deea;--noir:#111827;--rouge:#dc2626;--jaune:#facc15;--vert:#16a34a;--bleu:#2563eb}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:18px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.wrap{max-width:1500px;margin:0 auto;padding:20px 18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+    h1{margin:0;font-size:26px}.muted{color:var(--muted)}
+    .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}.btn-dark{background:#111827;color:#fff}.btn-light{background:#eef2ff;color:#1d4ed8}.btn-red{background:#fee2e2;color:#991b1b}.btn-gray{background:#e5e7eb;color:#374151}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.05)}.pad{padding:16px}
+    .list{display:grid;gap:8px}.class-item{display:flex;gap:8px}.class-item button:first-child{flex:1;text-align:left}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tab.active{background:#111827;color:#fff}
+    .table-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}.table-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}.table-head{padding:14px 16px;color:#fff;font-weight:700}.table-body{padding:14px;display:grid;gap:12px}
+    .student{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}.student.blocked{background:#e5e7eb;opacity:.9}.student-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .p-noir{background:var(--noir);color:#fff}.p-rouge{background:var(--rouge);color:#fff}.p-jaune{background:var(--jaune);color:#111}.p-vert{background:var(--vert);color:#fff}.p-bleu{background:var(--bleu);color:#fff}
+    .status-row,.skill-pos,.ebeps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.chip{padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;cursor:pointer}.chip.active{outline:2px solid #111827}.chip.gray{background:#e5e7eb}.chip.green{background:#dcfce7;color:#166534}.chip.orange{background:#ffedd5;color:#9a3412}.chip.violet{background:#f3e8ff;color:#6b21a8}.chip.red{background:#fee2e2;color:#991b1b}
+    .dot{width:22px;height:22px;border-radius:999px;border:none;cursor:pointer}.dot.active{outline:3px solid #111827}.noir{background:var(--noir)}.rouge{background:var(--rouge)}.jaune{background:var(--jaune)}.vert{background:var(--vert)}.bleu{background:var(--bleu)}
+    .skill-line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:8px}.summary-item{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;background:#fff}.small{font-size:12px;color:var(--muted)}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap top" style="padding:0 18px;max-width:1500px;">
+      <div><h1>Suivi de classe</h1><div class="muted">Le suivi s’appuie sur les classes et élèves enregistrés dans l’outil de création de classes.</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-light" href="index.html">← Tableau de bord</a><a class="btn btn-light" href="creation-classes.html">Création de classes</a><button class="btn btn-dark" id="exportBtn">Exporter JSON</button></div>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="layout">
+      <aside class="card"><div class="pad">
+        <strong>Classes</strong>
+        <div id="classList" class="list" style="margin-top:12px"></div>
+        <div class="small" style="margin-top:12px">Les tables sont reconstruites automatiquement à partir du numéro de table indiqué dans la fiche élève.</div>
+      </div></aside>
+
+      <section>
+        <div class="tabs">
+          <button class="btn tab active" id="tabSuivi">Suivi en classe</button>
+          <button class="btn btn-light tab" id="tabBilan">Bilan de suivi</button>
+        </div>
+
+        <div id="panelSuivi" class="card"><div class="pad"><div id="tablesWrap" class="table-grid"></div></div></div>
+        <div id="panelBilan" class="card" style="display:none"><div class="pad"><div id="bilanWrap" class="list"></div></div></div>
+      </section>
+    </div>
+  </main>
+
+<script>
+const CLASSES_KEY='outil-classes-v1';
+const SUIVI_KEY='outil-suivi-v1';
+const LEVELS=[['noir',0],['rouge',1],['jaune',2],['vert',3],['bleu',4]];
+const DEFAULT_SKILLS=['Expérimenter','Choisir','S’organiser','Expliquer'];
+function lval(k){return Object.fromEntries(LEVELS)[k]??2}
+function lkey(v){if(v<0.5)return'noir'; if(v<1.5)return'rouge'; if(v<2.5)return'jaune'; if(v<3.5)return'vert'; return'bleu';}
+function load(key){try{const raw=localStorage.getItem(key); return raw?JSON.parse(raw):null;}catch{return null;}}
+function save(key,data){localStorage.setItem(key,JSON.stringify(data));}
+const classesData=load(CLASSES_KEY)||{classes:[]};
+let suivi=load(SUIVI_KEY)||{activeClassId:null,byClass:{}};
+if(!suivi.activeClassId && classesData.classes[0]) suivi.activeClassId=classesData.classes[0].id;
+function getActiveClass(){return classesData.classes.find(c=>c.id===suivi.activeClassId);} 
+function getSuiviForClass(classId){ if(!suivi.byClass[classId]) suivi.byClass[classId]={skills:[...DEFAULT_SKILLS],students:{}}; return suivi.byClass[classId]; }
+function studentKey(st){ return st.id; }
+function ensureStudentState(cls, st){ const sc=getSuiviForClass(cls.id); if(!sc.students[studentKey(st)]) sc.students[studentKey(st)]={absent:false,exclusion:false,discute:0,incident:0,travail:false,soutenir:false,reflexion:false,skills:{},notes:''}; const ss=sc.students[studentKey(st)]; sc.skills.forEach(skill=>{ if(!ss.skills[skill]) ss.skills[skill]='jaune';}); Object.keys(ss.skills).forEach(k=>{ if(!sc.skills.includes(k)) delete ss.skills[k]; }); return ss; }
+function groupTables(cls){ const map={}; (cls.students||[]).forEach(st=>{ const num=(st.table||'Sans table').toString().trim()||'Sans table'; if(!map[num]) map[num]=[]; map[num].push(st);}); return Object.entries(map).sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'fr',{numeric:true})); }
+function generalLevel(ss, sc){ if(ss.absent||ss.exclusion) return 'noir'; const vals=sc.skills.map(sk=>lval(ss.skills[sk]||'jaune')); return lkey(vals.reduce((a,b)=>a+b,0)/(vals.length||1)); }
+function tableLevel(cls, students){ const sc=getSuiviForClass(cls.id); const vals=students.map(st=>generalLevel(ensureStudentState(cls,st),sc)).map(lval); return lkey(vals.reduce((a,b)=>a+b,0)/(vals.length||1)); }
+function pill(level){return `<span class="pill p-${level}">${level[0].toUpperCase()+level.slice(1)}</span>`;}
+function escapeHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function renderClassList(){ const box=document.getElementById('classList'); box.innerHTML=''; classesData.classes.forEach(c=>{ const row=document.createElement('div'); row.className='class-item'; const b=document.createElement('button'); b.className=c.id===suivi.activeClassId?'btn-dark':'btn-light'; b.textContent=c.name; b.onclick=()=>{suivi.activeClassId=c.id; persist(); render();}; row.appendChild(b); box.appendChild(row); }); if(!classesData.classes.length) box.innerHTML='<div class="small">Aucune classe trouvée. Commence par la page “Création de classes”.</div>'; }
+function renderTables(){ const wrap=document.getElementById('tablesWrap'); wrap.innerHTML=''; const cls=getActiveClass(); if(!cls){ wrap.innerHTML='<div class="small">Aucune classe disponible.</div>'; return; } const sc=getSuiviForClass(cls.id); const groups=groupTables(cls); if(!groups.length){ wrap.innerHTML='<div class="small">Aucun élève dans cette classe.</div>'; return; }
+  groups.forEach(([tableNum,students])=>{ const level=tableLevel(cls,students); const card=document.createElement('div'); card.className='table-card'; card.innerHTML=`<div class="table-head ${level}" style="background:var(--${level})">Table ${escapeHtml(tableNum)}</div><div class="table-body"></div>`; const body=card.querySelector('.table-body');
+    students.slice(0,5).forEach(st=>{ const ss=ensureStudentState(cls,st); const gl=generalLevel(ss,sc); const blocked=ss.absent||ss.exclusion; const ebep=(st.ebeps||[]).length?`<div class="ebeps">${st.ebeps.map(e=>`<span class="chip gray">${escapeHtml(e)}</span>`).join('')}</div>`:'';
+      const box=document.createElement('div'); box.className='student'+(blocked?' blocked':'');
+      box.innerHTML=`<div class="student-top"><div><strong>${escapeHtml((st.prenom||'')+' '+(st.nom||''))||'Élève'}</strong><div class="small">Table ${escapeHtml(st.table||'')}</div></div>${pill(gl)}</div>${ebep}<div class="status-row">
+        <button class="chip gray ${ss.absent?'active':''}" data-act="absent">Absent</button>
+        <button class="chip red ${ss.exclusion?'active':''}" data-act="exclusion">Exclusion</button>
+        <button class="chip green ${ss.travail?'active':''}" data-act="travail">Au travail</button>
+        <button class="chip orange ${ss.soutenir?'active':''}" data-act="soutenir">À soutenir</button>
+        <button class="chip violet ${ss.reflexion?'active':''}" data-act="reflexion">En réflexion</button>
+        <button class="chip ${ss.discute>0?'active':''}" data-act="discute">Discute +${ss.discute}</button>
+        <button class="chip ${ss.incident>0?'active':''}" data-act="incident">Incident +${ss.incident}</button>
+      </div><div class="skills"></div>`;
+      box.querySelectorAll('[data-act]').forEach(btn=>btn.onclick=()=>{ const act=btn.dataset.act; if(act==='absent'){ ss.absent=!ss.absent; if(ss.absent) ss.exclusion=false; } else if(act==='exclusion'){ ss.exclusion=!ss.exclusion; if(ss.exclusion) ss.absent=false; } else if(act==='travail'){ ss.travail=!ss.travail; } else if(act==='soutenir'){ ss.soutenir=!ss.soutenir; } else if(act==='reflexion'){ ss.reflexion=!ss.reflexion; } else if(act==='discute'){ ss.discute++; } else if(act==='incident'){ ss.incident++; } persist(); render(); });
+      const skillsBox=box.querySelector('.skills');
+      sc.skills.forEach(skill=>{ const line=document.createElement('div'); line.className='skill-line'; line.innerHTML=`<div class="small" style="font-size:13px;color:#1f2937">${escapeHtml(skill)}</div><div class="skill-pos"></div>`; const pos=line.querySelector('.skill-pos'); ['noir','rouge','jaune','vert','bleu'].forEach(level=>{ const d=document.createElement('button'); d.className=`dot ${level} ${ss.skills[skill]===level?'active':''}`; d.onclick=()=>{ ss.skills[skill]=level; persist(); render(); }; pos.appendChild(d); }); skillsBox.appendChild(line); });
+      body.appendChild(box);
+    });
+    wrap.appendChild(card);
+  });
+}
+function renderBilan(){ const wrap=document.getElementById('bilanWrap'); wrap.innerHTML=''; const cls=getActiveClass(); if(!cls){ wrap.innerHTML='<div class="small">Aucune classe disponible.</div>'; return; } const sc=getSuiviForClass(cls.id); groupTables(cls).forEach(([tableNum,students])=>{ const level=tableLevel(cls,students); const item=document.createElement('div'); item.className='summary-item'; const abs=students.filter(st=>ensureStudentState(cls,st).absent).length; const exc=students.filter(st=>ensureStudentState(cls,st).exclusion).length; const inc=students.reduce((n,st)=>n+ensureStudentState(cls,st).incident,0);
+    item.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong>Table ${escapeHtml(tableNum)}</strong>${pill(level)}</div><div class="summary-stats"><div class="stat"><strong>${students.length}</strong><div class="small">Élèves</div></div><div class="stat"><strong>${abs}</strong><div class="small">Absents</div></div><div class="stat"><strong>${exc}</strong><div class="small">Exclusions</div></div></div><div style="margin-top:10px" class="small">Incidents cumulés : ${inc}</div><div style="margin-top:10px">${students.slice(0,5).map(st=>{ const ss=ensureStudentState(cls,st); return `<div style='display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #eef2f7'><span>${escapeHtml((st.prenom||'')+' '+(st.nom||''))}</span>${pill(generalLevel(ss,sc))}</div>`; }).join('')}</div>`;
+    wrap.appendChild(item);
+  });
+}
+function persist(){ save(SUIVI_KEY,suivi); }
+function render(){ renderClassList(); renderTables(); renderBilan(); persist(); }
+document.getElementById('tabSuivi').onclick=()=>{ document.getElementById('panelSuivi').style.display='block'; document.getElementById('panelBilan').style.display='none'; document.getElementById('tabSuivi').className='btn tab active'; document.getElementById('tabBilan').className='btn btn-light tab'; };
+document.getElementById('tabBilan').onclick=()=>{ document.getElementById('panelSuivi').style.display='none'; document.getElementById('panelBilan').style.display='block'; document.getElementById('tabBilan').className='btn tab active'; document.getElementById('tabSuivi').className='btn btn-light tab'; };
+document.getElementById('exportBtn').onclick=()=>{ const payload={classesData,suivi}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='suivi-classe.json'; a.click(); URL.revokeObjectURL(a.href); };
+render();
+</script>
+</body>
+</html>
