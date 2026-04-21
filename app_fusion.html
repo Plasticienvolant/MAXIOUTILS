@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fiche de cours – version repensée</title>
+  <style>
+    :root{
+      --bg:#f1f5f9; --card:#ffffff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+      --shadow:0 8px 28px rgba(15,23,42,.08);
+      --dark:#0f172a; --soft:#f8fafc;
+      --blue:#2563eb; --blue-soft:#dbeafe;
+      --green:#059669; --green-soft:#d1fae5;
+      --amber:#d97706; --amber-soft:#fef3c7;
+      --violet:#7c3aed; --violet-soft:#ede9fe;
+      --slate:#475569; --slate-soft:#e2e8f0;
+      --red:#dc2626; --red-soft:#fee2e2;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+    .head-wrap{max-width:1400px;margin:0 auto;padding:16px 22px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    h1,h2,h3,h4{margin:0;color:var(--dark)}
+    .title-wrap p{margin:0 0 6px 0;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .sub{margin-top:6px;color:var(--muted);font-size:14px}
+    .wrap{max-width:1400px;margin:0 auto;padding:20px 22px 48px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow)}
+    .card-pad{padding:20px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px}
+    button,.fake-btn{
+      border:none;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer;
+      font-size:14px;transition:transform .15s ease, opacity .15s ease
+    }
+    button:hover,.fake-btn:hover{transform:translateY(-1px);opacity:.95}
+    .btn{background:#111827;color:#fff}
+    .btn-light{background:#eef2ff;color:#1f3ea3}
+    .btn-green{background:#dcfce7;color:#166534}
+    .btn-violet{background:#f3e8ff;color:#6b21a8}
+    .btn-orange{background:#ffedd5;color:#9a3412}
+    .btn-gray{background:#e5e7eb;color:#374151}
+    .btn-red{background:#fee2e2;color:#991b1b}
+    label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:7px}
+    input, textarea, select{
+      width:100%;padding:11px 13px;border:1px solid #cfd8e3;border-radius:14px;font-size:14px;background:#fff;color:var(--text)
+    }
+    textarea{min-height:96px;resize:vertical}
+    .grid{display:grid;gap:18px}
+    .grid-2{grid-template-columns:1.05fr .95fr}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .status-row{display:grid;gap:12px;grid-template-columns:repeat(4,1fr);margin-bottom:18px}
+    .status-box{background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+    .status-box span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+    .status-box strong{display:block;margin-top:6px;font-size:20px;color:var(--dark)}
+    .section-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+    .section-tag{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700}
+    .tag-blue{background:var(--blue-soft);color:#1d4ed8}
+    .tag-green{background:var(--green-soft);color:#047857}
+    .tag-amber{background:var(--amber-soft);color:#b45309}
+    .tag-violet{background:var(--violet-soft);color:#6d28d9}
+    .tag-slate{background:var(--slate-soft);color:#334155}
+    .tag-red{background:var(--red-soft);color:#991b1b}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .field-block{display:grid;gap:12px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:#334155
+    }
+    .chip button{padding:0;background:none;border:none;color:#991b1b;font-size:13px}
+    .picker-box{background:var(--soft);border:1px solid var(--border);border-radius:18px;padding:14px}
+    .list-select{display:grid;gap:8px;max-height:240px;overflow:auto;padding-right:4px}
+    .pick-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px;border:1px solid var(--border);border-radius:14px;background:#fff}
+    .pick-row .code{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700}
+    .pick-row .map{font-size:12px;color:#475569}
+    .note-box{background:#f8fafc;border:1px solid var(--border);border-radius:18px;padding:12px}
+    .display-block{background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px}
+    .display-block h4{font-size:14px}
+    .display-list{display:grid;gap:10px}
+    .display-item{border:1px solid var(--border);border-radius:16px;padding:12px;background:#fff}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .footer-space{height:20px}
+    .notice{margin-top:12px;padding:12px 14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:.92rem;display:none}
+    .notice.show{display:block}
+    @media (max-width: 1100px){
+      .grid-2,.grid-3,.two-col,.status-row{grid-template-columns:1fr}
+      .head-wrap{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head-wrap">
+      <div class="title-wrap">
+        <p>Outil pédagogique</p>
+        <h1>Fiche de cours</h1>
+        <div class="sub">Version repensée : plus lisible, plus synthétique, mieux articulée avec les compétences réécrites.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn-light" onclick="window.location.href='index.html'">Retour tableau de bord</button>
+        <button class="btn-green" onclick="saveSheet()">Enregistrer la fiche</button>
+        <button class="btn-light" onclick="loadDemo()">Charger un exemple</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="status-row">
+      <div class="status-box"><span>Classe</span><strong id="statusClass">—</strong></div>
+      <div class="status-box"><span>Durée</span><strong id="statusDuration">—</strong></div>
+      <div class="status-box"><span>Compétences réécrites</span><strong id="statusSkills">0</strong></div>
+      <div class="status-box"><span>Références</span><strong id="statusRefs">0</strong></div>
+    </div>
+
+    <section class="card" style="margin-bottom:18px">
+      <div class="card-pad">
+        <div class="section-title">
+          <div>
+            <div class="section-tag tag-blue">1. Identité du cours</div>
+            <p class="muted small">Ce qui identifie rapidement la séance.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div>
+            <label for="title">Titre / incitation</label>
+            <input id="title" placeholder="Ex. Transformer une image par le dessin" />
+          </div>
+          <div>
+            <label for="className">Classe / niveau</label>
+            <input id="className" placeholder="Ex. 5e B" />
+          </div>
+          <div>
+            <label for="duration">Durée</label>
+            <input id="duration" placeholder="Ex. 2 séances" />
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-top:14px">
+          <div>
+            <label for="workMode">Organisation</label>
+            <select id="workMode">
+              <option>Travail individuel</option>
+              <option>Travail en binôme</option>
+              <option>Travail en groupe</option>
+              <option>Mixte</option>
+            </select>
+          </div>
+          <div>
+            <label for="materials">Matériel principal</label>
+            <input id="materials" placeholder="Ex. feuille, crayon, image support, ciseaux" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-2">
+      <section class="card">
+        <div class="card-pad">
+          <div class="section-title">
+            <div>
+              <div class="section-tag tag-green">2. Demande de cours</div>
+              <p class="muted small">Ce que les élèves doivent comprendre immédiatement.</p>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div>
+              <label for="consigne">Consigne principale</label>
+              <textarea id="consigne" placeholder="Écris la demande de cours telle qu’elle sera formulée aux élèves."></textarea>
+            </div>
+            <div>
+              <label for="contraintes">Contraintes</label>
+              <textarea id="contraintes" placeholder="Ex. Interdiction de gommer, une seule image support, dessin uniquement..."></textarea>
+            </div>
+            <div>
+              <label for="conditions">Conditions / organisation</label>
+              <textarea id="conditions" placeholder="Ex. Travail individuel, silence au début, verbalisation finale, 20 min de recherche..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-pad">
+          <div class="section-title">
+            <div>
+              <div class="section-tag tag-violet">3. Objectifs simplifiés</div>
+              <p class="muted small">Compétences réécrites visibles pour la classe et pour le suivi.</p>
+            </div>
+          </div>
+
+          <div class="picker-box">
+            <label for="customSkillInput">Ajouter une compétence réécrite</label>
+            <div class="toolbar">
+              <input id="customSkillInput" placeholder="Ex. Faire des choix visibles dans ton travail" />
+              <button class="btn-violet" onclick="addCustomSkill()">Ajouter</button>
+            </div>
+          </div>
+
+          <div class="picker-box" style="margin-top:12px">
+            <label>Bibliothèque de compétences réécrites</label>
+            <div id="rewrittenPool" class="list-select"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label>Compétences retenues pour la fiche</label>
+            <div id="selectedSkills" class="chips"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:18px">
+      <section class="card">
+        <div class="card-pad">
+          <div class="section-title">
+            <div>
+              <div class="section-tag tag-amber">4. Références</div>
+              <p class="muted small">Références utiles à la pratique, en nombre limité.</p>
+            </div>
+          </div>
+
+          <div class="picker-box">
+            <label for="refInput">Ajouter une référence</label>
+            <div class="toolbar">
+              <input id="refInput" placeholder="Ex. Alex Webb – Dallas, Texas, 1981" />
+              <button class="btn-orange" onclick="addReference()">Ajouter</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label>Références retenues</label>
+            <div id="referencesBox" class="display-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-pad">
+          <div class="section-title">
+            <div>
+              <div class="section-tag tag-slate">5. Mise en œuvre</div>
+              <p class="muted small">Ce qui sert à piloter le cours du côté enseignant.</p>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div>
+              <label for="oralTeacher">Ce que je dis / ce que j’écris</label>
+              <textarea id="oralTeacher" placeholder="Formulation enseignant, mots-clés, tableau, rappels importants..."></textarea>
+            </div>
+            <div>
+              <label for="pointsAttention">Points d’attention</label>
+              <textarea id="pointsAttention" placeholder="Ce qu’il faudra surveiller, relancer, valoriser ou reformuler."></textarea>
+            </div>
+            <div>
+              <label for="verbalisation">Verbalisation prévue</label>
+              <textarea id="verbalisation" placeholder="Questions de fin de séance, mise en commun, liens avec les références."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:18px">
+      <div class="card-pad">
+        <div class="section-title">
+          <div>
+            <div class="section-tag tag-red">6. Évaluation / liaison avec le suivi</div>
+            <p class="muted small">La fiche transmet au suivi des compétences réécrites lisibles, tout en gardant la correspondance officielle.</p>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="note-box">
+            <h4>Compétences réécrites visibles</h4>
+            <div id="summarySkills" class="display-list" style="margin-top:10px"></div>
+          </div>
+          <div class="note-box">
+            <h4>Correspondances officielles</h4>
+            <div id="summaryMappings" class="display-list" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div class="notice" id="notice"></div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px">
+      <div class="card-pad">
+        <div class="section-title">
+          <div>
+            <div class="section-tag tag-blue">Aperçu synthétique</div>
+            <p class="muted small">Version lisible de la fiche, centrée sur l’usage en classe.</p>
+          </div>
+        </div>
+
+        <div class="display-block">
+          <div id="previewBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-space"></div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'fiche_cours_rethink_v1';
+
+    const rewrittenLibrary = [
+      {
+        id:'CR1',
+        text:'Faire des choix visibles dans ton travail',
+        mappings:['C_OFF_01','C_OFF_02']
+      },
+      {
+        id:'CR2',
+        text:'Tester plusieurs idées avant de choisir',
+        mappings:['C_OFF_03']
+      },
+      {
+        id:'CR3',
+        text:'Expliquer ce que tu as voulu faire',
+        mappings:['C_OFF_04']
+      },
+      {
+        id:'CR4',
+        text:'Organiser ton travail sans perdre de temps',
+        mappings:['C_OFF_05']
+      }
+    ];
+
+    let state = loadState() || {
+      title:'',
+      className:'',
+      duration:'',
+      workMode:'Travail individuel',
+      materials:'',
+      consigne:'',
+      contraintes:'',
+      conditions:'',
+      oralTeacher:'',
+      pointsAttention:'',
+      verbalisation:'',
+      selectedSkillIds:[],
+      references:[]
+    };
+
+    function loadState(){
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      } catch(e){
+        return null;
+      }
+    }
+
+    function persist(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function showNotice(message){
+      const box = document.getElementById('notice');
+      box.textContent = message;
+      box.classList.add('show');
+      clearTimeout(window.__noticeTimer);
+      window.__noticeTimer = setTimeout(() => box.classList.remove('show'), 3200);
+    }
+
+    function updateStatuses(){
+      document.getElementById('statusClass').textContent = state.className || '—';
+      document.getElementById('statusDuration').textContent = state.duration || '—';
+      document.getElementById('statusSkills').textContent = state.selectedSkillIds.length;
+      document.getElementById('statusRefs').textContent = state.references.length;
+    }
+
+    function renderLibrary(){
+      const mount = document.getElementById('rewrittenPool');
+      mount.innerHTML = '';
+      rewrittenLibrary.forEach(item => {
+        const selected = state.selectedSkillIds.includes(item.id);
+        const row = document.createElement('div');
+        row.className = 'pick-row';
+        row.innerHTML = `
+          <input type="checkbox" ${selected ? 'checked' : ''} />
+          <div>
+            <div class="code">${item.id}</div>
+            <div><strong>${escapeHtml(item.text)}</strong></div>
+            <div class="map">Correspondances : ${item.mappings.join(', ') || '—'}</div>
+          </div>
+          <button class="btn-light">${selected ? 'Retirer' : 'Choisir'}</button>
+        `;
+        const checkbox = row.querySelector('input');
+        const button = row.querySelector('button');
+        const toggle = () => {
+          if(state.selectedSkillIds.includes(item.id)){
+            state.selectedSkillIds = state.selectedSkillIds.filter(id => id !== item.id);
+          } else {
+            state.selectedSkillIds.push(item.id);
+          }
+          persist();
+          render();
+        };
+        checkbox.onchange = toggle;
+        button.onclick = toggle;
+        mount.appendChild(row);
+      });
+    }
+
+    function renderSelectedSkills(){
+      const mount = document.getElementById('selectedSkills');
+      mount.innerHTML = '';
+      const selected = rewrittenLibrary.filter(item => state.selectedSkillIds.includes(item.id));
+      if(!selected.length){
+        mount.innerHTML = '<div class="muted small">Aucune compétence réécrite sélectionnée.</div>';
+        return;
+      }
+      selected.forEach(item => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.innerHTML = `
+          <span>${escapeHtml(item.text)}</span>
+          <button title="Retirer">✕</button>
+        `;
+        chip.querySelector('button').onclick = () => {
+          state.selectedSkillIds = state.selectedSkillIds.filter(id => id !== item.id);
+          persist();
+          render();
+        };
+        mount.appendChild(chip);
+      });
+    }
+
+    function renderReferences(){
+      const mount = document.getElementById('referencesBox');
+      mount.innerHTML = '';
+      if(!state.references.length){
+        mount.innerHTML = '<div class="muted small">Aucune référence ajoutée.</div>';
+        return;
+      }
+      state.references.forEach((ref, index) => {
+        const item = document.createElement('div');
+        item.className = 'display-item';
+        item.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+            <div>${escapeHtml(ref)}</div>
+            <button class="btn-red">Suppr.</button>
+          </div>
+        `;
+        item.querySelector('button').onclick = () => {
+          state.references.splice(index,1);
+          persist();
+          render();
+        };
+        mount.appendChild(item);
+      });
+    }
+
+    function renderSummary(){
+      const selected = rewrittenLibrary.filter(item => state.selectedSkillIds.includes(item.id));
+      const skillsMount = document.getElementById('summarySkills');
+      const mappingsMount = document.getElementById('summaryMappings');
+
+      skillsMount.innerHTML = '';
+      mappingsMount.innerHTML = '';
+
+      if(!selected.length){
+        skillsMount.innerHTML = '<div class="muted small">Aucune compétence réécrite retenue.</div>';
+        mappingsMount.innerHTML = '<div class="muted small">Aucune correspondance officielle visible.</div>';
+        return;
+      }
+
+      selected.forEach(item => {
+        const a = document.createElement('div');
+        a.className = 'display-item';
+        a.innerHTML = `<strong>${escapeHtml(item.text)}</strong>`;
+        skillsMount.appendChild(a);
+
+        const b = document.createElement('div');
+        b.className = 'display-item';
+        b.innerHTML = `
+          <div><strong>${item.id}</strong></div>
+          <div class="muted small" style="margin-top:6px">${item.mappings.join(', ') || '—'}</div>
+        `;
+        mappingsMount.appendChild(b);
+      });
+    }
+
+    function renderPreview(){
+      const selected = rewrittenLibrary.filter(item => state.selectedSkillIds.includes(item.id));
+      const preview = document.getElementById('previewBox');
+      preview.innerHTML = `
+        <div class="display-list">
+          <div class="display-item">
+            <h3>${escapeHtml(state.title || 'Titre du cours')}</h3>
+            <div class="muted small" style="margin-top:6px">
+              ${escapeHtml(state.className || 'Classe')} • ${escapeHtml(state.duration || 'Durée')} • ${escapeHtml(state.workMode || 'Organisation')}
+            </div>
+          </div>
+
+          <div class="display-item">
+            <h4>Consigne</h4>
+            <div class="small" style="margin-top:8px">${formatBlock(state.consigne)}</div>
+          </div>
+
+          <div class="display-item">
+            <h4>Contraintes et conditions</h4>
+            <div class="small" style="margin-top:8px">${formatBlock([state.contraintes, state.conditions].filter(Boolean).join('\n\n'))}</div>
+          </div>
+
+          <div class="display-item">
+            <h4>Objectifs simplifiés</h4>
+            <div class="display-list" style="margin-top:10px">
+              ${selected.length
+                ? selected.map(item => `<div class="chip">${escapeHtml(item.text)}</div>`).join('')
+                : '<div class="muted small">Aucune compétence réécrite sélectionnée.</div>'}
+            </div>
+          </div>
+
+          <div class="display-item">
+            <h4>Références</h4>
+            <div class="display-list" style="margin-top:10px">
+              ${state.references.length
+                ? state.references.map(ref => `<div class="chip">${escapeHtml(ref)}</div>`).join('')
+                : '<div class="muted small">Aucune référence.</div>'}
+            </div>
+          </div>
+
+          <div class="display-item">
+            <h4>Repères enseignant</h4>
+            <div class="small" style="margin-top:8px">${formatBlock([state.oralTeacher, state.pointsAttention, state.verbalisation].filter(Boolean).join('\n\n'))}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function formatBlock(text){
+      if(!text) return '<span class="muted small">À compléter.</span>';
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    function bindFields(){
+      const ids = [
+        'title','className','duration','materials','consigne','contraintes','conditions',
+        'oralTeacher','pointsAttention','verbalisation'
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        el.value = state[id] || '';
+        el.onblur = () => {
+          state[id] = el.value.trim();
+          persist();
+          render();
+        };
+      });
+
+      const workMode = document.getElementById('workMode');
+      workMode.value = state.workMode || 'Travail individuel';
+      workMode.onchange = () => {
+        state.workMode = workMode.value;
+        persist();
+        render();
+      };
+    }
+
+    function addCustomSkill(){
+      const input = document.getElementById('customSkillInput');
+      const value = input.value.trim();
+      if(!value) return;
+      const newId = 'CR' + (rewrittenLibrary.length + 1);
+      rewrittenLibrary.push({ id:newId, text:value, mappings:['À relier'] });
+      state.selectedSkillIds.push(newId);
+      input.value = '';
+      persist();
+      render();
+      showNotice('Compétence réécrite ajoutée.');
+    }
+
+    function addReference(){
+      const input = document.getElementById('refInput');
+      const value = input.value.trim();
+      if(!value) return;
+      state.references.push(value);
+      input.value = '';
+      persist();
+      render();
+      showNotice('Référence ajoutée.');
+    }
+
+    function saveSheet(){
+      collectLiveValues();
+      persist();
+      render();
+      showNotice('Fiche de cours enregistrée.');
+    }
+
+    function collectLiveValues(){
+      ['title','className','duration','materials','consigne','contraintes','conditions','oralTeacher','pointsAttention','verbalisation']
+        .forEach(id => state[id] = document.getElementById(id).value.trim());
+      state.workMode = document.getElementById('workMode').value;
+    }
+
+    function loadDemo(){
+      state = {
+        title:'Transformer une image par le dessin',
+        className:'5e B',
+        duration:'2 séances',
+        workMode:'Travail individuel',
+        materials:'Feuille, crayon, image support, ciseaux',
+        consigne:'À partir d’une image imprimée, transforme la scène par le dessin pour lui donner une autre ambiance ou une autre histoire.',
+        contraintes:'Tu dois conserver une partie visible de l’image de départ.\nTu ne peux utiliser que le dessin.',
+        conditions:'Travail individuel.\nTemps de recherche au brouillon puis réalisation finale.\nVerbalisation en fin de séance.',
+        oralTeacher:'Mettre l’accent sur les choix, les écarts, les transformations visibles.',
+        pointsAttention:'Aider les élèves qui restent trop proches de l’image initiale.\nRelancer ceux qui n’osent pas transformer.',
+        verbalisation:'Qu’as-tu choisi de conserver ? Qu’as-tu choisi de modifier ? Pourquoi ?',
+        selectedSkillIds:['CR1','CR2','CR3'],
+        references:['Alex Webb – Dallas, Texas, 1981','Edward Hopper – Rooms by the Sea','Jacques Tati – Playtime']
+      };
+      persist();
+      render();
+      showNotice('Exemple chargé.');
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function render(){
+      bindFields();
+      updateStatuses();
+      renderLibrary();
+      renderSelectedSkills();
+      renderReferences();
+      renderSummary();
+      renderPreview();
+    }
+
+    render();
+  </script>
+</body>
+</html>
