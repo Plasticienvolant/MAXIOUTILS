@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord — Écosystème pédagogique</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 2px 10px rgba(15, 23, 42, 0.06);
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --slate: #475569;
+      --slate-soft: #e2e8f0;
+      --green: #059669;
+      --green-soft: #d1fae5;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --violet: #7c3aed;
+      --violet-soft: #ede9fe;
+      --dark: #0f172a;
+      --hover: #f8fafc;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .app { min-height: 100vh; }
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
+    .title {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--dark);
+    }
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .nav a, .nav button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .nav a:hover, .nav button:hover {
+      background: var(--hover);
+      color: var(--dark);
+    }
+    .nav .active {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero h2, .section-title {
+      margin: 0;
+      color: var(--dark);
+    }
+    .hero p, .section-subtitle {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr 1.15fr 1fr;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 16px; }
+
+    .phase {
+      border-radius: 24px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
+    .phase.blue { background: var(--blue-soft); border-color: #bfdbfe; }
+    .phase.green { background: var(--green-soft); border-color: #a7f3d0; }
+    .phase.amber { background: var(--amber-soft); border-color: #fde68a; }
+    .phase-violet { background: var(--violet-soft); border-color: #ddd6fe; }
+    .phase-label {
+      margin: 0 0 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+    .blue .phase-label { color: #1d4ed8; }
+    .green .phase-label { color: #047857; }
+    .amber .phase-label { color: #b45309; }
+    .phase-violet .phase-label { color: #6d28d9; }
+
+    .module-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .module-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: #cbd5e1;
+    }
+    .module-card.featured {
+      box-shadow: 0 0 0 2px #d1fae5, var(--shadow-soft);
+    }
+    .module-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .icon {
+      font-size: 1.4rem;
+      line-height: 1;
+      width: 28px;
+      flex: 0 0 28px;
+      text-align: center;
+    }
+    .module-title {
+      margin: 0;
+      font-size: 1.02rem;
+      color: var(--dark);
+    }
+    .module-text {
+      margin: 6px 0 14px;
+      font-size: 0.93rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .module-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn, .btn-secondary {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s ease;
+    }
+    .btn {
+      background: var(--dark);
+      color: #fff;
+    }
+    .btn:hover { opacity: 0.94; }
+    .btn-secondary {
+      background: #f8fafc;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: #eef2f7;
+    }
+
+    .core {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 18px;
+    }
+    .core-main {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 0 0 2px #e2e8f0, var(--shadow-soft);
+    }
+    .core-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .pill {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #f8fafc;
+      font-size: 0.92rem;
+      color: #334155;
+    }
+
+    .teaching-box {
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .flow-panel .flow-grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .flow-item {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      font-size: 0.92rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+    }
+    .flow-item strong { color: var(--dark); }
+    .arrow { color: #94a3b8; font-weight: 700; }
+
+    .status-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .status-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+    .status-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .status-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: var(--dark);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      font-size: 0.92rem;
+      max-width: 360px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: 0.22s ease;
+      z-index: 50;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .flow-panel .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner { flex-direction: column; align-items: flex-start; }
+      .nav { width: 100%; }
+      .core-grid, .status-bar, .flow-panel .flow-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <p class="eyebrow">Outil pédagogique</p>
+          <h1 class="title">Tableau de bord</h1>
+        </div>
+        <nav class="nav">
+          <a href="#" class="active">Accueil</a>
+          <a href="#avant-classe">Avant la classe</a>
+          <a href="#enseignement">Mon enseignement</a>
+          <a href="#en-classe">En classe</a>
+          <a href="#apres-classe">Après la classe</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="panel hero">
+        <h2>Temporalité du travail pédagogique</h2>
+        <p>Les applications suivent le déroulement réel du travail de l’enseignant. Cette page sert à la fois de carte du système et de point d’entrée vers les modules.</p>
+      </section>
+
+      <section class="status-bar">
+        <div class="status-card">
+          <div class="status-label">Classe active</div>
+          <div class="status-value" id="active-class-display">Aucune classe sélectionnée</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Fiche active</div>
+          <div class="status-value" id="active-course-display">Aucune fiche sélectionnée</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Références</div>
+          <div class="status-value" id="active-ref-display">Aucune référence sélectionnée</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow" style="margin-bottom:8px;">Vue hybride</p>
+        <h2 class="section-title">Architecture générale et cœur du système</h2>
+        <p class="section-subtitle">La fiche de cours est le pivot. Les autres applications s’organisent avant, pendant et après la classe autour d’elle, avec des liens d’ouverture et des actions de transmission.</p>
+
+        <div class="layout" style="margin-top:18px;">
+          <div class="stack">
+            <div class="phase blue" id="avant-classe">
+              <p class="phase-label">Avant la classe</p>
+
+              <article class="module-card" data-module="Créer les classes">
+                <div class="module-head">
+                  <div class="icon">🏫</div>
+                  <div>
+                    <h3 class="module-title">Créer les classes</h3>
+                    <p class="module-text">Structure les élèves, profils et besoins.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="classes.html">Ouvrir</a>
+                  <button class="btn-secondary" data-action="select-class" data-value="Classe à sélectionner">Définir comme point de départ</button>
+                </div>
+              </article>
+
+              <article class="module-card" data-module="Sélectionner la classe">
+                <div class="module-head">
+                  <div class="icon">🎯</div>
+                  <div>
+                    <h3 class="module-title">Sélectionner la classe</h3>
+                    <p class="module-text">Active la classe concernée pour la préparation.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="selection-classe.html">Ouvrir</a>
+                  <button class="btn-secondary" data-action="select-class" data-value="Classe active définie">Sélectionner la classe</button>
+                  <button class="btn-secondary" data-action="route" data-target="Fiche de cours">Vers Fiche de cours</button>
+                </div>
+              </article>
+            </div>
+
+            <div class="phase amber" id="apres-classe">
+              <p class="phase-label">Après la classe</p>
+
+              <article class="module-card" data-module="Synthèse élèves">
+                <div class="module-head">
+                  <div class="icon">📊</div>
+                  <div>
+                    <h3 class="module-title">Synthèse élèves</h3>
+                    <p class="module-text">Transforme les traces du suivi en lecture pédagogique.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="synthese-eleves.html">Ouvrir</a>
+                  <button class="btn-secondary" data-action="route" data-target="Appréciations">Vers Appréciations</button>
+                </div>
+              </article>
+
+              <article class="module-card" data-module="Appréciations">
+                <div class="module-head">
+                  <div class="icon">✍️</div>
+                  <div>
+                    <h3 class="module-title">Création d’appréciations</h3>
+                    <p class="module-text">Produit une formulation exploitable et exportable.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="appreciations.html">Ouvrir</a>
+                </div>
+              </article>
+
+              <article class="module-card" data-module="Progression">
+                <div class="module-head">
+                  <div class="icon">📈</div>
+                  <div>
+                    <h3 class="module-title">Progression des apprentissages</h3>
+                    <p class="module-text">Relie les fiches et la classe à la progression annuelle.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="progression.html">Ouvrir</a>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="core" id="enseignement">
+            <div class="core-main">
+              <p class="eyebrow">Noyau central</p>
+              <div class="module-head" style="margin-bottom:10px;">
+                <div class="icon" style="font-size:1.9rem;width:36px;flex-basis:36px;">📄</div>
+                <div>
+                  <h3 class="module-title" style="font-size:1.2rem;">Fiche de cours</h3>
+                  <p class="module-text" style="margin-bottom:0;">Fiche institutionnelle pivot alimentée par la classe sélectionnée et le fichier Excel.</p>
+                </div>
+              </div>
+              <div class="core-grid">
+                <div class="pill">Reçoit : fichier Excel, classe sélectionnée</div>
+                <div class="pill">Transmet : réservoir, références, mon cours, suivi, tableau, progression</div>
+              </div>
+              <div class="module-actions" style="margin-top:14px;">
+                <a class="btn" href="fiche-de-cours.html">Ouvrir</a>
+                <button class="btn-secondary" data-action="select-course" data-value="Fiche de cours active">Sélectionner cette fiche</button>
+                <button class="btn-secondary" data-action="route" data-target="Réservoir de fiches">Verser dans le réservoir</button>
+                <button class="btn-secondary" data-action="route" data-target="Mon cours">Envoyer vers Mon cours</button>
+              </div>
+            </div>
+
+            <div class="teaching-box">
+              <p class="eyebrow">Mon enseignement</p>
+              <div class="stack">
+                <article class="module-card" data-module="Conception du cours">
+                  <div class="module-head">
+                    <div class="icon">🧠</div>
+                    <div>
+                      <h3 class="module-title">Conception du cours</h3>
+                      <p class="module-text">Lieu de pensée pédagogique, nourri par les textes et objectifs.</p>
+                    </div>
+                  </div>
+                  <div class="module-actions">
+                    <a class="btn" href="conception-cours.html">Ouvrir</a>
+                  </div>
+                </article>
+
+                <article class="module-card" data-module="Réservoir de fiches">
+                  <div class="module-head">
+                    <div class="icon">🗂️</div>
+                    <div>
+                      <h3 class="module-title">Réservoir de fiches</h3>
+                      <p class="module-text">Stocke et permet de re-sélectionner une fiche déjà prête.</p>
+                    </div>
+                  </div>
+                  <div class="module-actions">
+                    <a class="btn" href="reservoir-fiches.html">Ouvrir</a>
+                    <button class="btn-secondary" data-action="route" data-target="Fiche de cours">Sélectionner une fiche</button>
+                  </div>
+                </article>
+
+                <article class="module-card" data-module="Fiche de références">
+                  <div class="module-head">
+                    <div class="icon">🖼️</div>
+                    <div>
+                      <h3 class="module-title">Fiche de références</h3>
+                      <p class="module-text">Construit et transmet les références vers l’accompagnement du cours.</p>
+                    </div>
+                  </div>
+                  <div class="module-actions">
+                    <a class="btn" href="fiche-references.html">Ouvrir</a>
+                    <button class="btn-secondary" data-action="select-ref" data-value="Références actives">Sélectionner des références</button>
+                    <button class="btn-secondary" data-action="route" data-target="Mon cours">Envoyer vers Mon cours</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack" id="en-classe">
+            <div class="phase green">
+              <p class="phase-label">En classe</p>
+
+              <article class="module-card" data-module="Mon cours">
+                <div class="module-head">
+                  <div class="icon">🗣️</div>
+                  <div>
+                    <h3 class="module-title">Mon cours</h3>
+                    <p class="module-text">Ce que l’enseignant dit, écrit, montre et fait circuler.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="mon-cours.html">Ouvrir</a>
+                  <button class="btn-secondary" data-action="route" data-target="Tableau de cours">Vers Tableau</button>
+                </div>
+              </article>
+
+              <article class="module-card featured" data-module="Suivi de cours">
+                <div class="module-head">
+                  <div class="icon">👥</div>
+                  <div>
+                    <h3 class="module-title">Suivi de cours</h3>
+                    <p class="module-text">Le cœur du terrain : positionnement et observation des élèves.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="suivi-de-cours.html">Ouvrir</a>
+                  <button class="btn-secondary" data-action="route" data-target="Synthèse élèves">Vers Synthèse</button>
+                </div>
+              </article>
+
+              <article class="module-card" data-module="Tableau de cours">
+                <div class="module-head">
+                  <div class="icon">🧲</div>
+                  <div>
+                    <h3 class="module-title">Tableau de cours</h3>
+                    <p class="module-text">Affiche et organise visiblement les éléments utiles à la séance.</p>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  <a class="btn" href="tableau-de-cours.html">Ouvrir</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel flow-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div>
+            <h2 class="section-title">Flux entre les applications</h2>
+            <p class="section-subtitle">Lecture transversale des transmissions d’informations.</p>
+          </div>
+          <span style="background:#f1f5f9;border:1px solid var(--border);padding:8px 12px;border-radius:999px;font-size:0.78rem;font-weight:700;color:var(--muted);">Vue simplifiée</span>
+        </div>
+
+        <div class="flow-grid">
+          <div class="flow-item"><strong>Créer les classes</strong> <span class="arrow">→</span> <span>Sélectionner la classe</span></div>
+          <div class="flow-item"><strong>Sélectionner la classe</strong> <span class="arrow">→</span> <span>Fiche de cours</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Réservoir de fiches</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Fiche de références</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Mon cours</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Suivi de cours</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Tableau de cours</span></div>
+          <div class="flow-item"><strong>Fiche de références</strong> <span class="arrow">→</span> <span>Mon cours</span></div>
+          <div class="flow-item"><strong>Suivi de cours</strong> <span class="arrow">→</span> <span>Synthèse élèves</span></div>
+          <div class="flow-item"><strong>Synthèse élèves</strong> <span class="arrow">→</span> <span>Appréciations</span></div>
+          <div class="flow-item"><strong>Réservoir de fiches</strong> <span class="arrow">→</span> <span>Progression</span></div>
+          <div class="flow-item"><strong>Fiche de cours</strong> <span class="arrow">→</span> <span>Progression</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      activeClass: localStorage.getItem('dashboard_active_class') || 'Aucune classe sélectionnée',
+      activeCourse: localStorage.getItem('dashboard_active_course') || 'Aucune fiche sélectionnée',
+      activeReferences: localStorage.getItem('dashboard_active_references') || 'Aucune référence sélectionnée'
+    };
+
+    const displays = {
+      class: document.getElementById('active-class-display'),
+      course: document.getElementById('active-course-display'),
+      ref: document.getElementById('active-ref-display')
+    };
+
+    function renderState() {
+      displays.class.textContent = state.activeClass;
+      displays.course.textContent = state.activeCourse;
+      displays.ref.textContent = state.activeReferences;
+    }
+
+    function toast(message) {
+      const node = document.getElementById('toast');
+      node.textContent = message;
+      node.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => node.classList.remove('show'), 2200);
+    }
+
+    function saveState() {
+      localStorage.setItem('dashboard_active_class', state.activeClass);
+      localStorage.setItem('dashboard_active_course', state.activeCourse);
+      localStorage.setItem('dashboard_active_references', state.activeReferences);
+      renderState();
+    }
+
+    document.querySelectorAll('[data-action]').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.action;
+        const value = button.dataset.value;
+        const target = button.dataset.target;
+
+        if (action === 'select-class') {
+          state.activeClass = value || 'Classe active définie';
+          saveState();
+          toast('Classe active mise à jour.');
+          return;
+        }
+
+        if (action === 'select-course') {
+          state.activeCourse = value || 'Fiche de cours active';
+          saveState();
+          toast('Fiche active sélectionnée.');
+          return;
+        }
+
+        if (action === 'select-ref') {
+          state.activeReferences = value || 'Références actives';
+          saveState();
+          toast('Références actives mises à jour.');
+          return;
+        }
+
+        if (action === 'route') {
+          toast('Transmission prévue vers : ' + target);
+          return;
+        }
+      });
+    });
+
+    renderState();
+  </script>
+</body>
+</html>
