@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de composition de séance</title>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --line:#d8dee6;
+      --text:#1f2937;
+      --muted:#667085;
+      --shadow:0 8px 24px rgba(15,23,42,.06);
+      --r-xl:24px;
+      --r-lg:18px;
+      --r-md:14px;
+      --font: "Aptos","Segoe UI","Inter","Helvetica Neue",Arial,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+    }
+    .page{
+      max-width:1360px;
+      margin:0 auto;
+      padding:20px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r-xl);
+      box-shadow:var(--shadow);
+    }
+    .hero{
+      padding:26px 28px;
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0 0 8px 0;
+      font-size:34px;
+      line-height:1.1;
+    }
+    .muted{
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill, button, select, input, textarea{
+      font:inherit;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      background:#f8fafc;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:16px;
+      padding:10px 14px;
+      cursor:pointer;
+    }
+    .btn:hover{background:#f8fafc}
+    .tabs{
+      display:flex;
+      gap:8px;
+      width:max-content;
+      max-width:100%;
+      padding:6px;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
+    }
+    .tab-btn{
+      border:0;
+      background:transparent;
+      border-radius:14px;
+      padding:10px 16px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .tab-btn.active{
+      background:#eef2f7;
+      font-weight:600;
+    }
+    .panel{display:none}
+    .panel.active{display:block}
+    .grid-lib{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .bank-section{
+      padding:18px;
+    }
+    .section-tag{
+      display:inline-block;
+      margin-bottom:12px;
+      border-radius:999px;
+      border:1px solid;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:600;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .chip{
+      border:1px solid;
+      border-radius:14px;
+      padding:10px 14px;
+      background:#fff;
+      cursor:pointer;
+      transition:transform .12s ease;
+    }
+    .chip:hover{transform:translateY(-1px)}
+    .lib-card{
+      padding:22px;
+    }
+    .lib-add{
+      margin-top:16px;
+      padding-top:16px;
+      border-top:1px solid var(--line);
+      display:grid;
+      grid-template-columns:220px 1fr auto;
+      gap:10px;
+    }
+    select,input,textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px 14px;
+      background:#fff;
+    }
+    textarea{
+      resize:vertical;
+      min-height:120px;
+    }
+    .grid-build{
+      display:grid;
+      grid-template-columns:minmax(0,1.15fr) minmax(380px,.85fr);
+      gap:18px;
+      align-items:start;
+    }
+    .build-card,.virtual-card{padding:22px}
+    .zones{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .slot{
+      min-height:118px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+    .slot-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .slot-title{
+      font-size:14px;
+      font-weight:600;
+    }
+    .slot .selected{
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .mini{
+      border:1px solid;
+      border-radius:14px;
+      padding:8px 10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:600;
+      background:#fff;
+    }
+    .x{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-size:16px;
+      line-height:1;
+      color:#475467;
+    }
+    .virtual-box{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:#f8fafc;
+      padding:18px;
+      display:grid;
+      gap:16px;
+    }
+    .v-row{
+      display:grid;
+      gap:8px;
+    }
+    .v-label{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#667085;
+      font-weight:700;
+    }
+    .v-chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .empty{
+      color:#98a2b3;
+      font-style:italic;
+      padding:4px 0;
+    }
+    .copy{
+      margin-top:10px;
+      width:100%;
+    }
+    .meta{
+      display:grid;
+      gap:10px;
+      margin-top:16px;
+    }
+    .meta-item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px 14px;
+      background:#fff;
+    }
+    .subhead{
+      margin:0 0 10px 0;
+      font-size:20px;
+    }
+    .desc{
+      margin:4px 0 18px 0;
+      color:var(--muted);
+    }
+
+    .c-actions{background:#ffe3ef;border-color:#f29ac0;color:#ad234f}
+    .c-supports{background:#e3f2ff;border-color:#82c5ff;color:#0f5f96}
+    .c-constraints{background:#fff1c9;border-color:#efc14a;color:#9a5800}
+    .c-notions{background:#efe7ff;border-color:#bea1ff;color:#6941c6}
+    .c-questionings{background:#e7ecff;border-color:#9bb0ff;color:#3646a8}
+    .c-materials{background:#e5f8ee;border-color:#8cd4ac;color:#157347}
+    .c-organizations{background:#eceff4;border-color:#c7d0dd;color:#1f2937}
+    .c-durations{background:#ffe8d1;border-color:#f3ad67;color:#b35208}
+    .c-objectives{background:#ddfbf6;border-color:#7fded0;color:#0f766e}
+    .c-verbalizations{background:#e1f8ff;border-color:#7dd3fc;color:#0369a1}
+    .c-success{background:#efffcf;border-color:#bce666;color:#58720a}
+
+    @media (max-width: 1100px){
+      .grid-build{grid-template-columns:1fr}
+    }
+    @media (max-width: 900px){
+      .grid-lib,.zones{grid-template-columns:1fr}
+      .lib-add{grid-template-columns:1fr}
+      h1{font-size:28px}
+      .page{padding:12px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="card hero">
+      <div>
+        <h1>Tableau de composition de séance</h1>
+        <div class="muted">Version structurée : la construction reste simple, et le tableau virtuel affiche maintenant une vraie hiérarchie du cours.</div>
+      </div>
+      <div class="toolbar">
+        <div class="pill"><span id="count">0</span> bloc sélectionné</div>
+        <button class="btn" id="resetBtn">Réinitialiser</button>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="library">1. Bibliothèque des blocs</button>
+      <button class="tab-btn" data-tab="build">2. Construction</button>
+    </div>
+
+    <section class="panel active" id="library">
+      <div class="card lib-card">
+        <h2 class="subhead">Bibliothèque complète</h2>
+        <p class="desc">Ici, tu ajoutes, enrichis et vérifies tous les blocs disponibles.</p>
+        <div class="grid-lib" id="libraryGrid"></div>
+
+        <div class="lib-add">
+          <select id="customCategory"></select>
+          <input id="customText" type="text" placeholder="Ajouter un nouveau bloc">
+          <button class="btn" id="addCustomBtn">Ajouter</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="build">
+      <div class="grid-build">
+        <div class="card build-card">
+          <h2 class="subhead">Construction</h2>
+          <p class="desc">Chaque case contient sa propre liste déroulante pour piocher directement dans la bonne catégorie.</p>
+          <div class="zones" id="zones"></div>
+        </div>
+
+        <div class="card virtual-card">
+          <h2 class="subhead">Tableau virtuel</h2>
+          <p class="desc">La formulation s’actualise pendant la construction. Les mots apparaissent dans une structure plus lisible.</p>
+
+          <div class="v-row">
+            <div style="font-weight:700;">Version élève</div>
+            <div class="virtual-box">
+              <div class="v-row">
+                <div class="v-label">1. Demande de cours</div>
+                <div class="v-chips" id="v-demande"></div>
+              </div>
+              <div class="v-row">
+                <div class="v-label">2. Contraintes</div>
+                <div class="v-chips" id="v-contraintes"></div>
+              </div>
+              <div class="v-row">
+                <div class="v-label">3. Conditions matérielles</div>
+                <div class="v-chips" id="v-materiel"></div>
+              </div>
+              <div class="v-row">
+                <div class="v-label">4. Organisation</div>
+                <div class="v-chips" id="v-orga"></div>
+              </div>
+              <div class="v-row">
+                <div class="v-label">5. Incitation / questionnement</div>
+                <div class="v-chips" id="v-question"></div>
+              </div>
+            </div>
+            <button class="btn copy" id="copyStudent">Copier la version élève</button>
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:18px 0;"></div>
+
+          <div class="v-row">
+            <div style="font-weight:700;">Version prof</div>
+            <textarea id="teacherText" readonly></textarea>
+            <button class="btn copy" id="copyTeacher">Copier la fiche prof</button>
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:18px 0;"></div>
+
+          <div style="font-weight:700;margin-bottom:10px;">Repères visibles</div>
+          <div class="meta">
+            <div class="meta-item" id="metaOrga">Organisation à définir</div>
+            <div class="meta-item" id="metaDuration">Durée à définir</div>
+            <div class="meta-item" id="metaMaterials">Matériel à définir</div>
+            <div class="meta-item" id="metaSuccess">Critères à définir</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const initialBank = {
+      actions: ["Transformer","Montrer","Cacher","Fragmenter","Opposer","Déformer","Révéler","Accumuler","Isoler","Faire disparaître"],
+      supports: ["une image","une photographie imprimée","une feuille blanche","un objet ordinaire","un volume simple","un fragment d'image"],
+      constraints: ["sans la rendre illisible","en noir et blanc seulement","sans découper","avec un seul outil","en 10 minutes","avec très peu de moyens","en grand format","sans ajouter de texte"],
+      notions: ["forme","couleur","matière","espace","lumière","support","outil","corps","temps"],
+      questionings: ["Que veux-tu faire comprendre ?","Comment le spectateur va-t-il lire ton image ?","Que gardes-tu visible et que fais-tu disparaître ?","Comment produire un effet fort avec peu de moyens ?","Comment transformer sans détruire ?"],
+      materials: ["crayon à papier","stylo bille noir","feutre noir","ciseaux","colle","règle","images imprimées"],
+      organizations: ["travail individuel","en binôme","en groupe"],
+      durations: ["10 min","20 min","30 min","1 séance","2 séances"],
+      objectives: ["expérimenter une transformation plastique","faire des choix visibles","rendre une intention lisible","interroger la perception du spectateur","travailler avec une contrainte forte"],
+      verbalizations: ["Explique ce que tu as voulu montrer.","Quels choix ont été les plus importants ?","Qu'est-ce qu'un spectateur comprendra en regardant ton travail ?","Quelle contrainte a le plus transformé ton idée ?"],
+      success: ["La transformation est visible.","L'intention est compréhensible.","Les contraintes sont respectées.","Les choix plastiques produisent un effet.","Le travail est organisé et soigné."]
+    };
+
+    const categoryMeta = {
+      actions: { label: "Actions", cls: "c-actions" },
+      supports: { label: "Supports", cls: "c-supports" },
+      constraints: { label: "Contraintes", cls: "c-constraints" },
+      notions: { label: "Notions", cls: "c-notions" },
+      questionings: { label: "Questionnements", cls: "c-questionings" },
+      materials: { label: "Matériel", cls: "c-materials" },
+      organizations: { label: "Organisation", cls: "c-organizations" },
+      durations: { label: "Durée", cls: "c-durations" },
+      objectives: { label: "Objectifs", cls: "c-objectives" },
+      verbalizations: { label: "Verbalisation", cls: "c-verbalizations" },
+      success: { label: "Critères", cls: "c-success" }
+    };
+
+    const builderZones = [
+      { key: "action", label: "Action principale", source: "actions", multiple: true },
+      { key: "support", label: "Support", source: "supports", multiple: true },
+      { key: "constraints", label: "Contraintes", source: "constraints", multiple: true },
+      { key: "organization", label: "Organisation", source: "organizations", multiple: true },
+      { key: "duration", label: "Durée", source: "durations", multiple: true },
+      { key: "notions", label: "Notions", source: "notions", multiple: true },
+      { key: "materials", label: "Matériel", source: "materials", multiple: true },
+      { key: "objective", label: "Objectif", source: "objectives", multiple: true },
+      { key: "questionings", label: "Questionnement", source: "questionings", multiple: true },
+      { key: "verbalization", label: "Verbalisation", source: "verbalizations", multiple: true },
+      { key: "success", label: "Critères de réussite", source: "success", multiple: true }
+    ];
+
+    let bank = JSON.parse(JSON.stringify(initialBank));
+    let selection = {
+      action: [], support: [], constraints: [], notions: [], questionings: [],
+      materials: [], organization: [], duration: [], objective: [],
+      verbalization: [], success: []
+    };
+
+    function joinNatural(items){
+      if (!items || items.length === 0) return "";
+      if (items.length === 1) return items[0];
+      if (items.length === 2) return `${items[0]} et ${items[1]}`;
+      return `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
+    }
+
+    function buildStudentText(sel){
+      const demand = [...sel.action, ...sel.support].filter(Boolean).join(" ");
+      let sentence = demand || "Composez une proposition plastique";
+      if (sel.constraints.length) sentence += " " + joinNatural(sel.constraints);
+      sentence = sentence.trim();
+      if (!sentence.endsWith(".")) sentence += ".";
+      const extras = [...sel.organization, ...sel.duration].filter(Boolean).join(" • ");
+      return extras ? `${sentence} ${extras}.` : sentence;
+    }
+
+    function buildTeacherText(sel, studentText){
+      const lines = [];
+      lines.push(`Consigne : ${studentText}`);
+      if (sel.objective.length) lines.push(`Objectif : ${joinNatural(sel.objective)}`);
+      if (sel.notions.length) lines.push(`Notions : ${joinNatural(sel.notions)}`);
+      if (sel.materials.length) lines.push(`Matériel : ${joinNatural(sel.materials)}`);
+      if (sel.questionings.length) lines.push(`Questionnement : ${joinNatural(sel.questionings)}`);
+      if (sel.verbalization.length) lines.push(`Verbalisation : ${joinNatural(sel.verbalization)}`);
+      if (sel.success.length) lines.push(`Critères de réussite : ${joinNatural(sel.success)}`);
+      return lines.join("\n\n");
+    }
+
+    function addToZone(zoneKey, value){
+      if (!selection[zoneKey].includes(value)) selection[zoneKey].push(value);
+      renderAll();
+    }
+
+    function removeFromZone(zoneKey, index){
+      selection[zoneKey].splice(index, 1);
+      renderAll();
+    }
+
+    function createMini(text, cls, zoneKey, index){
+      const span = document.createElement("span");
+      span.className = `mini ${cls}`;
+      span.textContent = text + " ";
+      if (zoneKey) {
+        const btn = document.createElement("button");
+        btn.className = "x";
+        btn.type = "button";
+        btn.textContent = "×";
+        btn.onclick = () => removeFromZone(zoneKey, index);
+        span.appendChild(btn);
+      }
+      return span;
+    }
+
+    function fillVirtual(containerId, items, source){
+      const el = document.getElementById(containerId);
+      el.innerHTML = "";
+      if (!items.length){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "À définir";
+        el.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => el.appendChild(createMini(item, categoryMeta[source].cls)));
+    }
+
+    function renderLibrary(){
+      const grid = document.getElementById("libraryGrid");
+      grid.innerHTML = "";
+      builderZones.forEach(zone => {
+        const source = zone.source;
+        const section = document.createElement("div");
+        section.className = "bank-section card";
+        section.innerHTML = `<div class="section-tag ${categoryMeta[source].cls}">${categoryMeta[source].label}</div>`;
+        const chips = document.createElement("div");
+        chips.className = "chips";
+        bank[source].forEach(item => {
+          const btn = document.createElement("button");
+          btn.className = `chip ${categoryMeta[source].cls}`;
+          btn.type = "button";
+          btn.textContent = item;
+          btn.onclick = () => addToZone(zone.key, item);
+          chips.appendChild(btn);
+        });
+        section.appendChild(chips);
+        grid.appendChild(section);
+      });
+    }
+
+    function renderZones(){
+      const zones = document.getElementById("zones");
+      zones.innerHTML = "";
+      builderZones.forEach(zone => {
+        const source = zone.source;
+        const slot = document.createElement("div");
+        slot.className = "slot";
+        const head = document.createElement("div");
+        head.className = "slot-head";
+        head.innerHTML = `<div class="slot-title">${zone.label}</div><div class="section-tag ${categoryMeta[source].cls}" style="margin:0">${categoryMeta[source].label}</div>`;
+        slot.appendChild(head);
+
+        const select = document.createElement("select");
+        select.innerHTML = `<option value="">Piocher dans ${categoryMeta[source].label.toLowerCase()}</option>` +
+          bank[source].map(item => `<option value="${item.replace(/"/g, '&quot;')}">${item}</option>`).join("");
+        select.onchange = (e) => {
+          if (e.target.value) addToZone(zone.key, e.target.value);
+          e.target.value = "";
+        };
+        slot.appendChild(select);
+
+        const selected = document.createElement("div");
+        selected.className = "selected";
+        if (!selection[zone.key].length){
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "Aucun bloc choisi.";
+          selected.appendChild(empty);
+        } else {
+          selection[zone.key].forEach((item, index) => {
+            selected.appendChild(createMini(item, categoryMeta[source].cls, zone.key, index));
+          });
+        }
+        slot.appendChild(selected);
+        zones.appendChild(slot);
+      });
+    }
+
+    function renderVirtual(){
+      fillVirtual("v-demande", [...selection.action, ...selection.support], "actions");
+      const demandeEl = document.getElementById("v-demande");
+      demandeEl.innerHTML = "";
+      const demand = [...selection.action.map(i => [i, "actions"]), ...selection.support.map(i => [i, "supports"])];
+      if (!demand.length) {
+        demandeEl.innerHTML = '<div class="empty">À définir</div>';
+      } else {
+        demand.forEach(([item, source]) => demandeEl.appendChild(createMini(item, categoryMeta[source].cls)));
+      }
+
+      fillVirtual("v-contraintes", selection.constraints, "constraints");
+
+      const matEl = document.getElementById("v-materiel");
+      matEl.innerHTML = "";
+      const mat = [...selection.materials.map(i => [i, "materials"]), ...selection.notions.map(i => [i, "notions"])];
+      if (!mat.length) matEl.innerHTML = '<div class="empty">Matériel ou notions à préciser</div>';
+      else mat.forEach(([item, source]) => matEl.appendChild(createMini(item, categoryMeta[source].cls)));
+
+      const orgaEl = document.getElementById("v-orga");
+      orgaEl.innerHTML = "";
+      const orga = [...selection.organization.map(i => [i, "organizations"]), ...selection.duration.map(i => [i, "durations"])];
+      if (!orga.length) orgaEl.innerHTML = '<div class="empty">Organisation à définir</div>';
+      else orga.forEach(([item, source]) => orgaEl.appendChild(createMini(item, categoryMeta[source].cls)));
+
+      fillVirtual("v-question", selection.questionings, "questionings");
+
+      const studentText = buildStudentText(selection);
+      document.getElementById("teacherText").value = buildTeacherText(selection, studentText);
+      document.getElementById("metaOrga").textContent = selection.organization.length ? joinNatural(selection.organization) : "Organisation à définir";
+      document.getElementById("metaDuration").textContent = selection.duration.length ? joinNatural(selection.duration) : "Durée à définir";
+      document.getElementById("metaMaterials").textContent = selection.materials.length ? joinNatural(selection.materials) : "Matériel à définir";
+      document.getElementById("metaSuccess").textContent = selection.success.length ? joinNatural(selection.success) : "Critères à définir";
+    }
+
+    function renderCount(){
+      const total = Object.values(selection).reduce((acc, arr) => acc + arr.length, 0);
+      document.getElementById("count").textContent = total;
+      const pill = document.querySelector(".pill");
+      pill.lastChild.textContent = total > 1 ? " blocs sélectionnés" : " bloc sélectionné";
+    }
+
+    function renderAll(){
+      renderLibrary();
+      renderZones();
+      renderVirtual();
+      renderCount();
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    const customCategory = document.getElementById("customCategory");
+    Object.keys(categoryMeta).forEach(key => {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = categoryMeta[key].label;
+      customCategory.appendChild(option);
+    });
+
+    document.getElementById("addCustomBtn").onclick = () => {
+      const key = customCategory.value;
+      const input = document.getElementById("customText");
+      const value = input.value.trim();
+      if (!value) return;
+      bank[key].unshift(value);
+      input.value = "";
+      renderAll();
+    };
+
+    document.getElementById("resetBtn").onclick = () => {
+      selection = {
+        action: [], support: [], constraints: [], notions: [], questionings: [],
+        materials: [], organization: [], duration: [], objective: [],
+        verbalization: [], success: []
+      };
+      renderAll();
+    };
+
+    document.getElementById("copyStudent").onclick = async () => {
+      await navigator.clipboard.writeText(buildStudentText(selection));
+    };
+    document.getElementById("copyTeacher").onclick = async () => {
+      await navigator.clipboard.writeText(buildTeacherText(selection, buildStudentText(selection)));
+    };
+
+    renderAll();
+  </script>
+</body>
+</html>
