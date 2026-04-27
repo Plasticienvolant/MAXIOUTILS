@@ -138,6 +138,7 @@ function canPlace(timeline,start,duration,movingId=null) { if(start<1 || start+d
 function clearSession(timeline,id) { const next={...timeline}; Object.keys(next).forEach(w=>{ if(next[w]?.id===id) delete next[w]; }); return next; }
 function placeSession(timeline,session,start,movingId=null) { if(!canPlace(timeline,start,session.duration,movingId)) return timeline; const next = movingId ? clearSession(timeline,movingId) : {...timeline}; for(let i=start;i<start+session.duration;i++) next[i] = {...session,startWeek:start,spanIndex:i-start}; return next; }
 
+  const SUIVI_URL = "app_suivi_visuel_v2_lie_fiche.html";
 function Header({module,setModule}) {
   const items=[["home","Accueil"],["excel","Fichier noyau"],["progression","Progression"],["organisation","Organisation"],["planning","Planning"],["edt","EDT"]];
   return <header className="top"><div><h1>Écosystème pédagogique</h1><p>Fichier noyau · Progression · Organisation · Planning · EDT</p></div><nav>{items.map(([id,label])=><button key={id} onClick={()=>setModule(id)} className={module===id?"active":""}>{label}</button>)}</nav></header>;
