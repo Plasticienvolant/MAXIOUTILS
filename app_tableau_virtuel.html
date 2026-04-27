@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tableau virtuel de cours</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--shadow:0 2px 10px rgba(15,23,42,.06)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.top{background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.top h1{margin:0;font-size:22px}.top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+button{border:1px solid var(--border);background:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:600}
+button.primary{background:#0f172a;color:#fff;border-color:#0f172a}
+.wrap{max-width:1200px;margin:0 auto;padding:24px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:24px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:16px}
+.form{display:flex;flex-direction:column;gap:12px}
+label{font-size:13px;font-weight:700;color:#334155}
+input,textarea,select{width:100%;border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff;font:inherit}
+textarea{min-height:90px}
+.sectionLine{border-radius:18px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;background:#fff}
+.sectionHeader{padding:10px 14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.sectionBody{padding:14px 16px;font-size:18px;line-height:1.45}
+.sectionBody ul{margin:0;padding-left:20px}.sectionBody li{margin:5px 0}
+.empty{border:1px dashed var(--border);border-radius:18px;padding:30px;text-align:center;color:var(--muted);background:#f8fafc}
+.previewTitle{font-size:28px;margin:0 0 18px;text-align:center}
+.small{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-block;background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:5px 9px;margin:2px;font-size:12px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.sectionBody{font-size:16px}}
+@media print{.top,.editor,.actions{display:none!important}body{background:white}.wrap{padding:0}.panel{box-shadow:none;border:none}.grid{display:block}.previewTitle{font-size:32px}.sectionBody{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Tableau virtuel de cours</h1>
+    <p>Version autonome reliée au contexte du cours</p>
+  </div>
+  <div class="toolbar">
+    <button id="homeBtn">← Accueil</button>
+    <button id="copyBtn">Copier</button>
+    <button id="printBtn" class="primary">Imprimer / projeter</button>
+  </div>
+</header>
+<main class="wrap">
+  <section class="panel">
+    <div id="ctx"></div>
+  </section>
+  <section class="grid">
+    <aside class="panel editor">
+      <h2>Modifier le tableau</h2>
+      <div class="form">
+        <div>
+          <label>Titre</label>
+          <input id="titleInput" />
+        </div>
+        <div id="editorFields"></div>
+        <div class="actions">
+          <button id="demoBtn">Remplir un exemple</button>
+        </div>
+      </div>
+    </aside>
+    <section class="panel">
+      <h2 id="previewTitle" class="previewTitle">Tableau de cours</h2>
+      <div id="preview"></div>
+    </section>
+  </section>
+</main>
+<script>
+const SECTION_COLORS = {
+  "DEMANDE DE COURS": { bg:"#1e3a5f", text:"#ffffff" },
+  "CE QUE JE DOIS FAIRE": { bg:"#1d4ed8", text:"#ffffff" },
+  "CE À QUOI JE DOIS RÉFLÉCHIR": { bg:"#92400e", text:"#ffffff" },
+  "CONTRAINTE(S)": { bg:"#6d28d9", text:"#ffffff" },
+  "ORGANISATION": { bg:"#374151", text:"#ffffff" },
+  "INDICATEURS DE RÉUSSITE": { bg:"#065f46", text:"#ffffff" }
+};
+
+const STORAGE_KEY = "maxio_tableau_virtuel_data";
+const DEFAULT_DATA = {
+  titre: "Tableau de cours",
+  sections: {
+    "DEMANDE DE COURS": [],
+    "CE QUE JE DOIS FAIRE": [],
+    "CE À QUOI JE DOIS RÉFLÉCHIR": [],
+    "CONTRAINTE(S)": [],
+    "ORGANISATION": [],
+    "INDICATEURS DE RÉUSSITE": []
+  }
+};
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveData(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function loadCourseContext(){
+  try{return JSON.parse(localStorage.getItem("eco_suivi_context")||"{}");}catch(e){return{};}
+}
+function loadIndicateurs(){
+  try{
+    const raw = localStorage.getItem("maxio_indicateurs_variantes");
+    if(!raw) return [];
+    const variantes = JSON.parse(raw);
+    return Object.entries(variantes).map(([familleId,varianteId]) => `Famille ${familleId} — Variante ${varianteId}`);
+  }catch(e){return [];}
+}
+
+let data = loadData();
+const ctx = loadCourseContext();
+
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function splitLines(text){
+  return String(text||"").split("\n").map(s=>s.trim()).filter(Boolean);
+}
+function getLines(){
+  const indicateurs = loadIndicateurs();
+  const sections = {...data.sections};
+  if(indicateurs.length && (!sections["INDICATEURS DE RÉUSSITE"] || sections["INDICATEURS DE RÉUSSITE"].length===0)){
+    sections["INDICATEURS DE RÉUSSITE"] = indicateurs;
+  }
+  return Object.entries(sections).map(([section,items]) => ({section,items:items||[]})).filter(l=>l.items.length>0);
+}
+function plainText(){
+  return getLines().map(l => `${l.section}\n${l.items.map(i=>"• "+i).join("\n")}`).join("\n\n");
+}
+function render(){
+  document.getElementById("titleInput").value = data.titre || "";
+  document.getElementById("previewTitle").textContent = data.titre || "Tableau de cours";
+  const ctxBox = document.getElementById("ctx");
+  const ctxParts = [];
+  if(ctx.classLabel) ctxParts.push(ctx.classLabel);
+  if(ctx.sessionTitle) ctxParts.push(ctx.sessionTitle);
+  if(ctx.week) ctxParts.push("Semaine " + ctx.week);
+  ctxBox.innerHTML = ctxParts.length ? ctxParts.map(p=>`<span class="chip">${escapeHtml(p)}</span>`).join("") : '<span class="small">Aucun contexte de cours reçu.</span>';
+
+  const editor = document.getElementById("editorFields");
+  editor.innerHTML = Object.keys(DEFAULT_DATA.sections).map(section => `
+    <div>
+      <label>${escapeHtml(section)}</label>
+      <textarea data-section="${escapeHtml(section)}" placeholder="Une ligne = un item">${escapeHtml((data.sections[section]||[]).join("\n"))}</textarea>
+    </div>
+  `).join("");
+  editor.querySelectorAll("textarea").forEach(t => t.addEventListener("input", updateFromEditor));
+
+  const lines = getLines();
+  const out = document.getElementById("preview");
+  if(lines.length===0){
+    out.innerHTML = '<div class="empty">Le tableau est vide. Ajoute des éléments à gauche.</div>';
+    return;
+  }
+  out.innerHTML = lines.map(l => {
+    const c = SECTION_COLORS[l.section] || {bg:"#334155",text:"#fff"};
+    return `<div class="sectionLine">
+      <div class="sectionHeader" style="background:${c.bg};color:${c.text}">${escapeHtml(l.section)}</div>
+      <div class="sectionBody"><ul>${l.items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>
+    </div>`;
+  }).join("");
+}
+function updateFromEditor(){
+  data.titre = document.getElementById("titleInput").value;
+  document.querySelectorAll("textarea[data-section]").forEach(t => {
+    data.sections[t.dataset.section] = splitLines(t.value);
+  });
+  saveData(data);
+  renderPreviewOnly();
+}
+function renderPreviewOnly(){
+  document.getElementById("previewTitle").textContent = data.titre || "Tableau de cours";
+  const lines = getLines();
+  const out = document.getElementById("preview");
+  if(lines.length===0){ out.innerHTML = '<div class="empty">Le tableau est vide. Ajoute des éléments à gauche.</div>'; return; }
+  out.innerHTML = lines.map(l => {
+    const c = SECTION_COLORS[l.section] || {bg:"#334155",text:"#fff"};
+    return `<div class="sectionLine"><div class="sectionHeader" style="background:${c.bg};color:${c.text}">${escapeHtml(l.section)}</div><div class="sectionBody"><ul>${l.items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div></div>`;
+  }).join("");
+}
+function resetDemo(){
+  data = {
+    titre: ctx.sessionTitle || "Tableau de cours",
+    sections: {
+      "DEMANDE DE COURS": [ctx.sessionTitle ? `Réalise un travail à partir de : ${ctx.sessionTitle}` : "Réalise une production plastique en respectant la demande."],
+      "CE QUE JE DOIS FAIRE": ["Choisir des moyens plastiques adaptés.", "Organiser mon travail dans le temps donné."],
+      "CE À QUOI JE DOIS RÉFLÉCHIR": ["Mon idée est-elle visible ?", "Mes choix plastiques sont-ils cohérents ?"],
+      "CONTRAINTE(S)": ["Respecter le format demandé.", "Utiliser les outils autorisés."],
+      "ORGANISATION": [ctx.classLabel ? `Classe : ${ctx.classLabel}` : "Travail individuel ou en groupe selon la consigne."],
+      "INDICATEURS DE RÉUSSITE": ["J’ai répondu à la demande.", "J’ai fait des choix visibles.", "Je peux expliquer mon travail."]
+    }
+  };
+  saveData(data);
+  render();
+}
+async function copyText(){
+  await navigator.clipboard.writeText(plainText());
+  alert("Tableau copié.");
+}
+function printPage(){ window.print(); }
+function goHome(){ window.location.href = "index.html#home"; }
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("titleInput").addEventListener("input", updateFromEditor);
+  document.getElementById("copyBtn").addEventListener("click", copyText);
+  document.getElementById("printBtn").addEventListener("click", printPage);
+  document.getElementById("demoBtn").addEventListener("click", resetDemo);
+  document.getElementById("homeBtn").addEventListener("click", goHome);
+  render();
+});
+</script>
+</body>
+</html>
