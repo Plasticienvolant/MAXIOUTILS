@@ -120,7 +120,10 @@
     .skill-student-line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
     .skill-pos{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
     .dot-btn{width:24px;height:24px;border-radius:999px;border:2px solid transparent;padding:0}
-    .dot-btn.active{outline:3px solid #111827}
+    .dot-btn.active{
+  outline:3px solid #111827;
+  transform:scale(1.2);
+}
     .dot-noir{background:var(--noir)}.dot-rouge{background:var(--rouge)}.dot-jaune{background:var(--jaune)}.dot-vert{background:var(--vert)}.dot-bleu{background:var(--bleu)}
 
     .bilan-wrap{display:grid;gap:14px}
@@ -601,7 +604,7 @@
                             class="dot-btn ${level.btn} ${selected === level.key ? 'active' : ''}"
                             title="${level.label}"
                             ${blocked ? 'disabled' : ''}
-                            onclick="window.setCompetence('${table.id}','${student.id}', ${JSON.stringify(skill)}, '${level.key}')"
+                            onclick="window.setCompetence('${table.id}','${student.id}', '${skill.replace(/'/g, "\\'")}', '${level.key}')"
                           ></button>
                         `).join('')}
                       </div>
