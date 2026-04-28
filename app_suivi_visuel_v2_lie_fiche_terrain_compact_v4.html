@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suivi de classe – terrain compact v3</title>
+  <style>
+    :root{
+      --bg:#f1f5f9; --card:#ffffff; --text:#1e293b; --muted:#64748b; --line:#dbe4ee;
+      --shadow:0 8px 28px rgba(15,23,42,.08);
+      --noir:#111827; --rouge:#dc2626; --jaune:#facc15; --vert:#16a34a; --bleu:#2563eb;
+      --gris:#cbd5e1; --orange:#fb923c; --violet:#8b5cf6; --cyan:#0891b2; --dark:#0f172a;
+      --soft:#f8fafc;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:16px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+    .head-wrap{max-width:1600px;margin:0 auto;display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+    h1{margin:0;font-size:26px;color:var(--dark)}
+    .sub{margin-top:6px;color:var(--muted);font-size:14px}
+    .wrap{padding:18px;max-width:1600px;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+    .card-pad{padding:18px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    button, .fake-btn{
+      border:none;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer;
+      transition:transform .15s ease, opacity .15s ease; font-size:14px
+    }
+    button:hover,.fake-btn:hover{transform:translateY(-1px);opacity:.95}
+    .btn{background:#111827;color:#fff}
+    .btn-light{background:#eef2ff;color:#1f3ea3}
+    .btn-red{background:#fee2e2;color:#991b1b}
+    .btn-green{background:#dcfce7;color:#166534}
+    .btn-orange{background:#ffedd5;color:#9a3412}
+    .btn-violet{background:#f3e8ff;color:#6b21a8}
+    .btn-gray{background:#e5e7eb;color:#374151}
+    input, textarea, select{
+      width:100%;padding:11px 13px;border:1px solid #cfd8e3;border-radius:14px;font-size:14px;background:#fff
+    }
+    textarea{min-height:84px;resize:vertical}
+    label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:7px}
+    .top-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:start}
+    .row{display:grid;gap:10px}
+    .row-2{grid-template-columns:1fr 1fr}
+    .skills{display:grid;gap:8px;margin-top:10px}
+    .skill-line{display:flex;gap:8px;align-items:center}
+    .skill-line input[type=text]{flex:1}
+    .legend{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:999px;padding:0 10px;font-size:12px;font-weight:700}
+    .p-noir{background:var(--noir);color:#fff}.p-rouge{background:var(--rouge);color:#fff}.p-jaune{background:var(--jaune);color:#111}.p-vert{background:var(--vert);color:#fff}.p-bleu{background:var(--bleu);color:#fff}
+    .muted{color:var(--muted)}
+    .small-card{padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    .tab{background:#fff;border:1px solid var(--line);color:#111827}
+    .tab.active{background:#111827;color:#fff}
+    .hidden{display:none !important}
+
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
+    .side{display:grid;gap:16px;align-self:start;position:sticky;top:96px}
+    .class-list{display:grid;gap:8px}
+    .class-item{display:flex;gap:8px}
+    .class-item button:first-child{flex:1;text-align:left}
+
+    .status-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .status-box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+    .status-box span{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .status-box strong{display:block;margin-top:6px;font-size:22px;color:var(--dark)}
+
+    .salle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px}
+    .table-card{border-radius:26px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow)}
+    .table-head{
+      padding:16px 18px;color:#fff;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px
+    }
+    .table-head .left{display:flex;align-items:center;gap:12px}
+    .table-badge{
+      width:50px;height:50px;border-radius:18px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;
+      font-size:24px;font-weight:800;border:1px solid rgba(255,255,255,.25)
+    }
+    .table-body{padding:16px;background:#fff}
+    .table-summary{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px
+    }
+    .summary-pill{
+      background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:10px;text-align:center
+    }
+    .summary-pill span{display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+    .summary-pill strong{display:block;font-size:18px;margin-top:4px;color:var(--dark)}
+
+    .students-visual{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}
+    .student-tile{
+      border:1px solid var(--line);border-radius:20px;padding:12px;background:#fff;transition:transform .15s ease, box-shadow .15s ease;
+      position:relative;min-height:140px
+    }
+    .student-tile:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,23,42,.06)}
+    .student-tile.blocked{background:#e5e7eb;opacity:.9}
+    .student-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+    .student-name{font-weight:700;font-size:14px;line-height:1.2}
+    .student-level-box{display:none}
+    .student-meta{font-size:12px;color:var(--muted);margin-top:6px;min-height:20px}
+    .level-strip{height:6px;border-radius:999px;margin:10px 0 8px 0;background:#e2e8f0}
+    .status-codes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+    .competence-codes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+    .code-chip{border:1px solid var(--line);border-radius:12px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;background:#f8fafc;color:#334155;line-height:1}
+    .code-chip small{display:block;font-size:10px;font-weight:700;margin-top:4px;color:#64748b}
+    .code-chip.ok{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+    .code-chip.warn{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+    .code-chip.alert{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+    .code-chip.dark{background:#111827;color:#fff;border-color:#111827}
+    .code-chip.dark small{color:#e5e7eb}
+    .code-chip.level-noir{background:var(--noir);color:#fff;border-color:var(--noir)}
+    .code-chip.level-rouge{background:var(--rouge);color:#fff;border-color:var(--rouge)}
+    .code-chip.level-jaune{background:var(--jaune);color:#111827;border-color:#eab308}
+    .code-chip.level-vert{background:var(--vert);color:#fff;border-color:var(--vert)}
+    .code-chip.level-bleu{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+    .code-chip.level-noir small,.code-chip.level-rouge small,.code-chip.level-vert small,.code-chip.level-bleu small{color:rgba(255,255,255,.86)}
+    .code-chip.level-jaune small{color:#111827}
+    .competence-codes .code-chip{cursor:pointer}
+    .student-actions{display:none}
+    .incident-note{margin-top:8px}
+    .incident-note textarea{min-height:38px;height:42px;font-size:13px;padding:8px 10px}
+    .open-detail{margin-top:10px;width:100%;padding:8px 10px;border-radius:12px;background:#f8fafc;color:#334155;border:1px solid var(--line);font-size:12px;font-weight:700}
+
+    .student-detail{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:none}
+    .student-detail.show{display:block}
+    .counter{display:flex;align-items:center;gap:6px}
+    .counter button{padding:6px 9px;border-radius:10px}
+    .counter span{font-weight:700;min-width:20px;text-align:center}
+    .detail-grid{display:grid;gap:10px}
+    .detail-grid-2{grid-template-columns:1fr 1fr}
+    .skill-student{display:grid;gap:8px;margin-top:10px}
+    .skill-student-line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    .skill-pos{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+    .dot-btn{width:24px;height:24px;border-radius:999px;border:2px solid transparent;padding:0}
+    .dot-btn.active{outline:3px solid #111827}
+    .dot-noir{background:var(--noir)}.dot-rouge{background:var(--rouge)}.dot-jaune{background:var(--jaune)}.dot-vert{background:var(--vert)}.dot-bleu{background:var(--bleu)}
+
+    .bilan-wrap{display:grid;gap:14px}
+    .bilan-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:14px}
+    .bilan-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .bilan-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+    .stat-box{padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;text-align:center}
+    .stat-box strong{display:block;font-size:18px}
+
+
+    .paste-box{min-height:180px;font-family:Arial,Helvetica,sans-serif;line-height:1.35}
+    .group-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .group-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+    .student-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+    .check-line{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff}
+    .check-line input{width:auto}
+    .eval-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
+    .mini-muted{font-size:12px;color:var(--muted)}
+
+
+    /* Mode terrain compact */
+    details.course-details{border:1px solid var(--line);border-radius:16px;background:#fff;margin-top:10px;padding:10px 12px}
+    details.course-details summary{cursor:pointer;font-weight:800;color:#334155}
+    .indicator-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:8px}
+    .indicator-line{display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center}
+    .quick-hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .unplaced-panel{margin-bottom:18px;border:2px dashed #cbd5e1;background:#fff;border-radius:22px;padding:14px;box-shadow:var(--shadow)}
+    .unplaced-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .unplaced-chip{border:1px solid var(--line);border-radius:999px;background:#f8fafc;padding:7px 9px;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13px}
+    .student-tile{touch-action:manipulation;user-select:none}
+    .student-tile{overflow:hidden}
+    .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;min-height:22px}
+    .mini-badge{font-size:10px;font-weight:800;border-radius:999px;padding:4px 7px;border:1px solid var(--line);background:#f8fafc;color:#334155;text-transform:uppercase;letter-spacing:.02em}
+    .mini-badge.work{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+    .mini-badge.reflect{background:#f3e8ff;color:#6b21a8;border-color:#e9d5ff}
+    .mini-badge.support{background:#ffedd5;color:#9a3412;border-color:#fed7aa}
+    .mini-badge.see{background:#cffafe;color:#155e75;border-color:#a5f3fc}
+    .mini-badge.seen{background:#e0f2fe;color:#075985;border-color:#bae6fd}
+    .mini-badge.incident{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+    .quick-menu-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:80;display:flex;align-items:center;justify-content:center;padding:18px}
+    .quick-menu{width:min(460px,100%);background:#fff;border-radius:26px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(15,23,42,.25);padding:16px}
+    .quick-menu h3{margin:0;font-size:20px;color:var(--dark)}
+    .quick-menu .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+    .quick-menu .menu-grid button{width:100%;min-height:44px}
+    .compact-course-banner{margin-bottom:14px;padding:14px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow)}
+    .compact-course-title{font-size:18px;font-weight:900;color:var(--dark)}
+    .compact-question{margin-top:6px;color:#334155;font-weight:700}
+
+
+    /* Ajustements terrain Tab A9 : moins de scroll, fiche repliable, compétences compactes */
+    .course-panel{background:transparent;border:0;padding:0;margin:0}
+    .course-panel > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:900;color:var(--dark);margin:0 0 10px 0}
+    .course-panel > summary::-webkit-details-marker{display:none}
+    .course-panel > summary::before{content:'▶';font-size:16px;color:#475569;transition:transform .15s ease}
+    .course-panel[open] > summary::before{transform:rotate(90deg)}
+    .course-panel .course-inner{display:grid;gap:10px}
+    #statusStrip{display:none}
+    .table-summary{display:none}
+    .table-body{padding:12px}
+    .students-visual{grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+    .student-tile{min-height:104px;padding:10px;border-radius:18px}
+    .student-detail{margin-top:10px;padding-top:10px}
+    .skill-student{gap:6px;margin-top:8px}
+    .skill-student-line{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;background:#f8fafc;padding:7px 8px}
+    .skill-label-compact{display:flex;align-items:center;justify-content:center;width:38px;min-height:32px;border-radius:12px;background:#fff;border:1px solid var(--line);font-weight:900;font-size:13px;color:#0f172a}
+    .skill-pos{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-start;align-items:center;overflow-x:auto;padding:2px 0}
+    .dot-btn{width:26px;height:26px;min-width:26px}
+    .detail-grid.detail-grid-2{grid-template-columns:1fr 1fr}
+    @media (max-width: 760px){.skill-student-line{grid-template-columns:42px 1fr}.dot-btn{width:25px;height:25px;min-width:25px}}
+
+    @media (max-width: 760px){
+      .quick-menu .menu-grid{grid-template-columns:1fr}
+      .student-actions{display:none}
+      .student-tile{min-height:112px;padding:10px;border-radius:18px}
+      .students-visual{grid-template-columns:1fr 1fr}
+    }
+
+    @media (max-width: 1200px){
+      .top-grid,.layout,.row-2,.detail-grid-2,.group-grid,.eval-row{grid-template-columns:1fr}
+      .side{position:static}
+      .status-strip,.table-summary,.bilan-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 760px){
+      .head-wrap{flex-direction:column}
+      .students-visual{grid-template-columns:1fr 1fr}
+      .status-strip,.table-summary,.bilan-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head-wrap">
+      <div>
+        <h1>Suivi de classe</h1>
+        <div class="sub">Version visuelle : lecture rapide de la salle, des tables et des élèves.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn-light" onclick="window.location.href='index.html'">Retour tableau de bord</button>
+        <button class="btn-violet" onclick="importSharedCourse(true)">Récupérer la fiche liée</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="top-grid">
+      <section class="card"><div class="card-pad">
+        <details class="course-panel" open>
+          <summary>Fiche de cours liée</summary>
+          <div class="course-inner">
+        <div class="row row-2">
+          <div>
+            <label>Intitulé du sujet / incitation</label>
+            <input id="courseTitle" placeholder="Ex. Presque un paysage" />
+          </div>
+          <div>
+            <label>Classe</label>
+            <input id="courseClass" placeholder="Ex. 5e B" />
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label>Demande de cours</label>
+          <textarea id="courseDemand" placeholder="Ce que les élèves doivent produire..."></textarea>
+        </div>
+        <div style="margin-top:10px">
+          <label>Questionnement central du sujet</label>
+          <textarea id="courseQuestion" placeholder="Ex. Comment se rapprocher d’un modèle sans le copier ?"></textarea>
+        </div>
+        <details class="course-details">
+          <summary>Compétences évaluables</summary>
+          <div id="skillsList" class="skills"></div>
+          <div class="toolbar" style="margin-top:10px">
+            <button class="btn-light" id="addSkillBtn">+ Ajouter une compétence</button>
+          </div>
+        </details>
+        <details class="course-details">
+          <summary>Indicateurs de réussite liés aux couleurs</summary>
+          <div id="indicatorsList" class="indicator-grid"></div>
+        </details>
+        <div class="toolbar" style="margin-top:10px">
+          <button class="btn" id="saveCourseBtn">Enregistrer la fiche de cours</button>
+        </div>
+          </div>
+        </details>
+      </div></section>
+
+      <section class="card"><div class="card-pad">
+        <h2 style="margin:0 0 10px 0;font-size:18px">Légende</h2>
+        <div class="legend">
+          <span class="pill p-noir">Noir</span>
+          <span class="pill p-rouge">Rouge</span>
+          <span class="pill p-jaune">Jaune</span>
+          <span class="pill p-vert">Vert</span>
+          <span class="pill p-bleu">Bleu</span>
+        </div>
+        <p class="muted">La couleur de l’élève indique sa réponse au questionnement central du sujet. Clic court = couleur suivante. Clic long = menu rapide.</p>
+        <div class="small-card" style="margin-top:12px">
+          <strong>Repères visuels :</strong>
+          <div class="muted" style="margin-top:6px">• vert = au travail</div>
+          <div class="muted">• violet = en réflexion</div>
+          <div class="muted">• orange = à soutenir</div>
+          <div class="muted">• noir = absent / exclusion</div>
+        </div>
+      </div></section>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="suivi-classe">Vue salle</button>
+      <button class="tab" data-tab="creation-classe">Créer classe</button>
+      <button class="tab" data-tab="groupes">Groupes / évaluation collective</button>
+      <button class="tab" data-tab="bilan-suivi">Bilan détaillé</button>
+    </div>
+
+    <div class="layout">
+      <aside class="side">
+        <section class="card"><div class="card-pad">
+          <h2 style="margin:0 0 10px 0;font-size:18px">Classes</h2>
+          <div class="class-list" id="classList"></div>
+          <div class="toolbar" style="margin-top:10px">
+            <button class="btn-light" id="addClassBtn">+ Nouvelle classe</button>
+          </div>
+        </div></section>
+
+        <section class="card"><div class="card-pad">
+          <h2 style="margin:0 0 10px 0;font-size:18px">Actions</h2>
+          <div class="toolbar">
+            <button class="btn-light" id="addTableBtn">+ Ajouter une table</button>
+            <button class="btn-gray" id="addStudentBtn">+ Ajouter un élève</button>
+          </div>
+          <p class="muted" style="margin-top:10px;font-size:13px">5 élèves maximum par table.</p>
+        </div></section>
+
+        <section class="card"><div class="card-pad">
+          <h2 style="margin:0 0 10px 0;font-size:18px">Sauvegarde</h2>
+          <div class="toolbar">
+            <button class="btn" id="exportBtn">Exporter JSON daté</button>
+            <button class="btn-green" id="localBackupBtn">Sauvegarde locale</button>
+            <button class="btn-orange" id="restoreLocalBackupBtn">Restaurer locale</button>
+            <label class="fake-btn btn-light" style="display:inline-flex;align-items:center;gap:8px">
+              Importer JSON
+              <input id="importInput" type="file" accept="application/json" class="hidden" />
+            </label>
+          </div>
+          <p class="muted" style="margin-top:10px;font-size:13px">Exporter = fichier à transférer PC/tablette. Sauvegarde locale = copie de secours dans ce navigateur.</p>
+        </div></section>
+      </aside>
+
+      <main>
+        <section id="tab-suivi-classe">
+          <div class="status-strip" id="statusStrip"></div>
+          <div id="compactCourseBanner" class="compact-course-banner"></div>
+          <div id="unplacedStudentsPanel"></div>
+          <div id="suiviClasseTables" class="salle-grid"></div>
+        </section>
+
+
+        <section id="tab-creation-classe" class="hidden">
+          <div class="card"><div class="card-pad">
+            <h2 style="margin:0 0 10px 0;font-size:18px">Créer une classe rapidement</h2>
+            <p class="muted">Colle une liste d’élèves. Sans colonne Table, les élèves iront dans “élèves non placés”. Avec une colonne Table/T1/T2, ils seront placés directement.</p>
+            <div class="row row-2">
+              <div>
+                <label>Nom de la classe</label>
+                <input id="quickClassName" placeholder="Ex. 5e B" />
+              </div>
+              <div>
+                <label>Répartition automatique ancienne version</label>
+                <select id="quickTableSize">
+                  <option value="0" selected>Ne pas placer automatiquement</option>
+                  <option value="4">4 élèves par table</option>
+                  <option value="3">3 élèves par table</option>
+                  <option value="5">5 élèves par table</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <label>Liste rapide</label>
+              <textarea id="quickStudentsList" class="paste-box" placeholder="Dupont Léa
+Martin Yanis
+Benali Sofia
+Petit Noé
+
+Ou depuis Excel :
+Nom	Prénom	Table	Place	EBEP
+Dupont	Léa	T1	A	PAP"></textarea>
+            </div>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="btn" id="createClassFromListBtn">Créer la classe avec cette liste</button>
+              <button class="btn-light" id="addListToCurrentClassBtn">Ajouter cette liste à la classe active</button>
+            </div>
+          </div></div>
+        </section>
+
+        <section id="tab-groupes" class="hidden">
+          <div class="card"><div class="card-pad">
+            <h2 style="margin:0 0 10px 0;font-size:18px">Former les groupes</h2>
+            <p class="muted">Tu peux créer un groupe à partir d’une table entière ou sélectionner seulement 2 ou 3 élèves.</p>
+            <div class="group-grid">
+              <div class="group-card">
+                <h3 style="margin:0 0 10px 0;font-size:16px">Créer un groupe</h3>
+                <label>Nom du groupe</label>
+                <input id="groupName" placeholder="Ex. Groupe affiche / Duo photo / Table 3" />
+                <div class="row row-2" style="margin-top:10px">
+                  <div>
+                    <label>Depuis une table entière</label>
+                    <select id="groupTableSelect"></select>
+                  </div>
+                  <div style="display:flex;align-items:end">
+                    <button class="btn-light" id="createGroupFromTableBtn" style="width:100%">Créer depuis la table</button>
+                  </div>
+                </div>
+                <div style="margin-top:12px">
+                  <label>Ou sélection manuelle</label>
+                  <div id="manualStudentChecks" class="student-checks"></div>
+                  <button class="btn" id="createManualGroupBtn" style="margin-top:10px">Créer le groupe sélectionné</button>
+                </div>
+              </div>
+              <div class="group-card">
+                <h3 style="margin:0 0 10px 0;font-size:16px">Évaluation collective</h3>
+                <div class="eval-row">
+                  <div>
+                    <label>Cible</label>
+                    <select id="evalTarget"></select>
+                  </div>
+                  <div>
+                    <label>Compétence</label>
+                    <select id="evalSkill"></select>
+                  </div>
+                  <div>
+                    <label>Couleur</label>
+                    <select id="evalLevel">
+                      <option value="noir">Noir</option>
+                      <option value="rouge">Rouge</option>
+                      <option value="jaune" selected>Jaune</option>
+                      <option value="vert">Vert</option>
+                      <option value="bleu">Bleu</option>
+                    </select>
+                  </div>
+                  <button class="btn-green" id="applyCollectiveEvalBtn">Appliquer</button>
+                </div>
+                <div id="groupsList" style="margin-top:14px;display:grid;gap:10px"></div>
+              </div>
+            </div>
+          </div></div>
+        </section>
+
+        <section id="tab-bilan-suivi" class="hidden">
+          <div class="card"><div class="card-pad">
+            <h2 style="margin:0 0 10px 0;font-size:18px">Bilan de suivi par table</h2>
+            <div id="bilanTables" class="bilan-wrap"></div>
+          </div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const POSITION_LEVELS = [
+      { key: 'noir', label: 'Noir', value: 0, className: 'p-noir', btn: 'dot-noir', color: '#111827' },
+      { key: 'rouge', label: 'Rouge', value: 1, className: 'p-rouge', btn: 'dot-rouge', color: '#dc2626' },
+      { key: 'jaune', label: 'Jaune', value: 2, className: 'p-jaune', btn: 'dot-jaune', color: '#facc15' },
+      { key: 'vert', label: 'Vert', value: 3, className: 'p-vert', btn: 'dot-vert', color: '#16a34a' },
+      { key: 'bleu', label: 'Bleu', value: 4, className: 'p-bleu', btn: 'dot-bleu', color: '#2563eb' }
+    ];
+
+    const DEFAULT_SKILLS = [
+      'Expérimenter plusieurs solutions plastiques',
+      'Faire des choix cohérents avec l’intention',
+      'S’organiser dans le travail',
+      'Expliquer sa démarche'
+    ];
+
+    const COMPETENCE_GROUPS = [
+      { key: 'creer', label: 'Créer', code: 'Cr' },
+      { key: 'reflechir', label: 'Réfléchir / questionner', code: 'Re' },
+      { key: 'mise', label: 'Mise en œuvre', code: 'MO' },
+      { key: 'expliquer', label: 'Expliquer', code: 'Ex' },
+      { key: 'connaitre', label: 'Connaître', code: 'Co' }
+    ];
+
+
+
+    function defaultIndicators(){
+      return {
+        noir: 'Non observable',
+        rouge: 'Le lien avec le questionnement est peu visible',
+        jaune: 'Quelques éléments répondent au questionnement',
+        vert: 'La réponse au questionnement est claire',
+        bleu: 'La réponse est maîtrisée, inventive et argumentée'
+      };
+    }
+
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    function createStudent(name = 'Nouvel élève') {
+      return {
+        id: uid(),
+        name,
+        absent: false,
+        exclu: false,
+        discute: 0,
+        participe: 0,
+        incident: 0,
+        incidentNote: '',
+        niveau: 'jaune',
+        travail: false,
+        soutenir: false,
+        reflexion: false,
+        aVoir: false,
+        vu: false,
+        ebep: '',
+        place: '',
+        notes: '',
+        competences: {},
+        competenceGroups: {},
+        detailOpen: false
+      };
+    }
+
+    function createTable(name) { return { id: uid(), name, students: [] }; }
+    function createClass(name = 'Classe 1') {
+      return {
+        id: uid(),
+        name,
+        course: { title: '', courseClass: name, demand: '', question: '', skills: [...DEFAULT_SKILLS], indicators: defaultIndicators() },
+        tables: [createTable('Table 1')],
+        unplacedStudents: [],
+        groups: []
+      };
+    }
+
+    const STORAGE_KEY = 'suivi-classe-v4-visuel';
+    const SHARED_COURSE_KEY = 'shared_course_context_v1';
+    const ACTIVE_CLASS_KEY = 'dashboard_active_class';
+    let legacy = null;
+    try { legacy = JSON.parse(localStorage.getItem('suivi-classe-v3-github') || 'null'); } catch(e) {}
+    let state = loadState() || legacy || { classes: [createClass('Classe 1')], activeClassId: null, activeTab: 'suivi-classe' };
+    if (!state.activeClassId) state.activeClassId = state.classes[0].id;
+    if (!state.activeTab) state.activeTab = 'suivi-classe';
+    state.classes.forEach(c => {
+      if(!Array.isArray(c.groups)) c.groups = [];
+      if(!Array.isArray(c.unplacedStudents)) c.unplacedStudents = [];
+      if(!c.course) c.course = { title:'', courseClass:c.name, skills:[...DEFAULT_SKILLS] };
+      if(!c.course.indicators) c.course.indicators = defaultIndicators();
+      if(typeof c.course.demand !== 'string') c.course.demand = '';
+      if(typeof c.course.question !== 'string') c.course.question = '';
+    });
+    importSharedCourse(false);
+
+
+    function getSharedCourse(){
+      try {
+        return JSON.parse(localStorage.getItem(SHARED_COURSE_KEY) || 'null');
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function ensureClassForName(className){
+      if(!className) return getActiveClass();
+      let found = state.classes.find(c => c.name === className);
+      if(!found){
+        found = createClass(className);
+        state.classes.push(found);
+      }
+      state.activeClassId = found.id;
+      return found;
+    }
+
+    function importSharedCourse(showAlert = false){
+      const payload = getSharedCourse();
+      if(!payload){
+        if(showAlert) alert('Aucune fiche transmise n’a été trouvée.');
+        return false;
+      }
+      const targetClassName = payload.className || localStorage.getItem(ACTIVE_CLASS_KEY) || '';
+      const cls = ensureClassForName(targetClassName || 'Classe 1');
+
+      cls.course.title = payload.title || cls.course.title || '';
+      cls.course.demand = payload.demande || payload.demand || cls.course.demand || '';
+      cls.course.question = payload.questionnement || payload.question || cls.course.question || '';
+      cls.course.courseClass = targetClassName || cls.course.courseClass || cls.name;
+      cls.name = cls.course.courseClass || cls.name;
+
+      const rewrittenSkills = (payload.rewrittenSkills || []).map(s => s.text).filter(Boolean);
+      if(rewrittenSkills.length){
+        cls.course.skills = [...rewrittenSkills];
+      }
+
+      if(!cls.tables.length){
+        cls.tables = [createTable('Table 1')];
+      }
+
+      ensureCompetenceMaps();
+      saveState();
+      if(showAlert){
+        alert('Fiche récupérée : titre, classe et compétences réécrites ont été intégrés au suivi.');
+      }
+      return true;
+    }
+
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function loadState() { try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; } }
+    function getActiveClass() { return state.classes.find(c => c.id === state.activeClassId); }
+    function getLevel(key) { return POSITION_LEVELS.find(l => l.key === key) || POSITION_LEVELS[2]; }
+
+    function ensureCompetenceMaps() {
+      const current = getActiveClass();
+      if (!current) return;
+      [...current.tables.flatMap(t => t.students), ...(current.unplacedStudents || [])].forEach(student => {
+        if(!student.niveau) student.niveau = 'jaune';
+        if(typeof student.aVoir !== 'boolean') student.aVoir = false;
+        if(typeof student.vu !== 'boolean') student.vu = false;
+        if(typeof student.ebep !== 'string') student.ebep = '';
+        if(typeof student.place !== 'string') student.place = '';
+        if(!student.competences) student.competences = {};
+        if(!student.competenceGroups) student.competenceGroups = {};
+        COMPETENCE_GROUPS.forEach(group => {
+          if(!student.competenceGroups[group.key]) student.competenceGroups[group.key] = 'jaune';
+        });
+        Object.keys(student.competenceGroups).forEach(key => {
+          if(!COMPETENCE_GROUPS.some(group => group.key === key)) delete student.competenceGroups[key];
+        });
+        current.course.skills.forEach(skill => {
+          if (!student.competences[skill]) student.competences[skill] = 'jaune';
+        });
+        Object.keys(student.competences).forEach(skill => {
+          if (!current.course.skills.includes(skill)) delete student.competences[skill];
+        });
+        if (typeof student.detailOpen !== 'boolean') student.detailOpen = false;
+      });
+    }
+
+    function studentGeneralLevel(student, cls) {
+      if (student.absent || student.exclu) return getLevel('noir');
+      return getLevel(student.niveau || 'jaune');
+    }
+
+    function tableAverageLevel(table, cls) {
+      const active = table.students.filter(s => !s.absent && !s.exclu);
+      if (!active.length) return getLevel('noir');
+      const avg = active.reduce((sum, s) => sum + studentGeneralLevel(s, cls).value, 0) / active.length;
+      if (avg < 0.5) return getLevel('noir');
+      if (avg < 1.5) return getLevel('rouge');
+      if (avg < 2.5) return getLevel('jaune');
+      if (avg < 3.5) return getLevel('vert');
+      return getLevel('bleu');
+    }
+
+    function render() {
+      ensureCompetenceMaps();
+      saveState();
+      renderTabs();
+      renderClassList();
+      renderCourse();
+      renderStatusStrip();
+      renderCompactCourseBanner();
+      renderUnplacedStudents();
+      renderSuiviClasse();
+      renderGroupes();
+      renderBilanSuivi();
+    }
+
+    function renderTabs() {
+      document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === state.activeTab));
+      document.getElementById('tab-suivi-classe').classList.toggle('hidden', state.activeTab !== 'suivi-classe');
+      document.getElementById('tab-creation-classe').classList.toggle('hidden', state.activeTab !== 'creation-classe');
+      document.getElementById('tab-groupes').classList.toggle('hidden', state.activeTab !== 'groupes');
+      document.getElementById('tab-bilan-suivi').classList.toggle('hidden', state.activeTab !== 'bilan-suivi');
+    }
+
+    function renderClassList() {
+      const list = document.getElementById('classList');
+      list.innerHTML = '';
+      state.classes.forEach(cls => {
+        const row = document.createElement('div');
+        row.className = 'class-item';
+        const main = document.createElement('button');
+        main.className = cls.id === state.activeClassId ? 'btn' : 'btn-light';
+        main.textContent = cls.name;
+        main.onclick = () => { state.activeClassId = cls.id; render(); };
+        const del = document.createElement('button');
+        del.className = 'btn-red';
+        del.textContent = 'Suppr.';
+        del.onclick = () => {
+          if (state.classes.length === 1) return alert('Il faut garder au moins une classe.');
+          state.classes = state.classes.filter(c => c.id !== cls.id);
+          if (state.activeClassId === cls.id) state.activeClassId = state.classes[0].id;
+          render();
+        };
+        row.append(main, del);
+        list.appendChild(row);
+      });
+    }
+
+    function renderCourse() {
+      const cls = getActiveClass();
+      document.getElementById('courseTitle').value = cls.course.title || '';
+      document.getElementById('courseClass').value = cls.course.courseClass || cls.name;
+      document.getElementById('courseDemand').value = cls.course.demand || '';
+      document.getElementById('courseQuestion').value = cls.course.question || '';
+      if(!cls.course.indicators) cls.course.indicators = defaultIndicators();
+      const indicators = document.getElementById('indicatorsList');
+      indicators.innerHTML = POSITION_LEVELS.map(level => `
+        <div class="indicator-line">
+          <span class="pill ${level.className}">${level.label}</span>
+          <input value="${escapeHtml(cls.course.indicators[level.key] || '')}" onchange="window.updateIndicator('${level.key}', this.value)" />
+        </div>
+      `).join('');
+      const skills = document.getElementById('skillsList');
+      skills.innerHTML = '';
+      cls.course.skills.forEach((skill, index) => {
+        const row = document.createElement('div');
+        row.className = 'skill-line';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = skill;
+        input.onchange = () => {
+          const old = cls.course.skills[index];
+          const val = input.value.trim() || `Compétence ${index+1}`;
+          cls.course.skills[index] = val;
+          cls.tables.forEach(table => table.students.forEach(student => {
+            if (student.competences[old] && !student.competences[val]) student.competences[val] = student.competences[old];
+            if (old !== val) delete student.competences[old];
+          }));
+          render();
+        };
+        const del = document.createElement('button');
+        del.className = 'btn-red';
+        del.textContent = 'Suppr.';
+        del.onclick = () => {
+          const removed = cls.course.skills.splice(index,1)[0];
+          cls.tables.forEach(table => table.students.forEach(student => delete student.competences[removed]));
+          render();
+        };
+        row.append(input, del);
+        skills.appendChild(row);
+      });
+    }
+
+
+    function renderCompactCourseBanner(){
+      const cls = getActiveClass();
+      const mount = document.getElementById('compactCourseBanner');
+      if(!mount) return;
+      const title = cls.course.title || 'Sujet non renseigné';
+      const question = cls.course.question || 'Questionnement central non renseigné';
+      mount.innerHTML = `
+        <div class="compact-course-title">${escapeHtml(title)}</div>
+        <div class="compact-question">${escapeHtml(question)}</div>
+        <div class="quick-hint">Clic court sur un élève : couleur suivante. Clic long : menu rapide.</div>
+      `;
+    }
+
+    function renderUnplacedStudents(){
+      const cls = getActiveClass();
+      const mount = document.getElementById('unplacedStudentsPanel');
+      if(!mount) return;
+      const list = cls.unplacedStudents || [];
+      if(!list.length){ mount.innerHTML = ''; return; }
+      mount.innerHTML = `
+        <div class="unplaced-panel">
+          <strong>Élèves non placés (${list.length})</strong>
+          <div class="muted" style="margin-top:4px">Ils ont été importés sans colonne Table. Place-les au fur et à mesure.</div>
+          <div class="unplaced-list">
+            ${list.map(s => `
+              <span class="unplaced-chip">
+                ${escapeHtml(s.name)}${s.ebep ? ` · ${escapeHtml(s.ebep)}` : ''}
+                <button class="btn-light" onclick="window.placeUnplacedStudent('${s.id}')">Placer</button>
+                <button class="btn-red" onclick="window.deleteUnplacedStudent('${s.id}')">×</button>
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStatusStrip() {
+      const cls = getActiveClass();
+      const allStudents = cls.tables.flatMap(t => t.students);
+      const active = allStudents.filter(s => !s.absent && !s.exclu).length;
+      const absent = allStudents.filter(s => s.absent).length;
+      const exclu = allStudents.filter(s => s.exclu).length;
+      const support = allStudents.filter(s => s.soutenir).length;
+      const mount = document.getElementById('statusStrip');
+      mount.innerHTML = `
+        <div class="status-box"><span>Classe active</span><strong>${escapeHtml(cls.name)}</strong></div>
+        <div class="status-box"><span>Élèves actifs</span><strong>${active}</strong></div>
+        <div class="status-box"><span>Absents / exclus</span><strong>${absent + exclu}</strong></div>
+        <div class="status-box"><span>À soutenir</span><strong>${support}</strong></div>
+      `;
+    }
+
+
+    function counterTone(value, warnAt = 3, alertAt = 5){
+      const n = Number(value || 0);
+      if(n >= alertAt) return 'alert';
+      if(n >= warnAt) return 'warn';
+      if(n > 0) return 'ok';
+      return '';
+    }
+
+    function statusChip(label, value, tone = '', title = ''){
+      const shown = value === true ? '✓' : (value || '—');
+      return `<div class="code-chip ${tone}" title="${escapeHtml(title || label)}"><span>${escapeHtml(label)}</span><small>${escapeHtml(shown)}</small></div>`;
+    }
+
+    function competenceGroupChip(group, student, tableId){
+      const levelKey = student.competenceGroups?.[group.key] || 'jaune';
+      const level = getLevel(levelKey);
+      return `<div class="code-chip level-${level.key}" title="${escapeHtml(group.label)} : ${escapeHtml(level.label)}" onclick="event.stopPropagation(); window.cycleCompetenceGroup('${tableId}','${student.id}','${group.key}')"><span>${escapeHtml(group.code)}</span><small>${escapeHtml(level.label.slice(0,1))}</small></div>`;
+    }
+
+    function clearEvalForBlocked(student){
+      student.niveau = 'noir';
+      student.travail = false;
+      student.soutenir = false;
+      student.reflexion = false;
+      student.aVoir = false;
+      student.vu = false;
+      student.competenceGroups = {};
+      COMPETENCE_GROUPS.forEach(group => student.competenceGroups[group.key] = 'noir');
+    }
+
+    function renderSuiviClasse() {
+      const cls = getActiveClass();
+      const mount = document.getElementById('suiviClasseTables');
+      mount.innerHTML = '';
+
+      cls.tables.forEach(table => {
+        const avg = tableAverageLevel(table, cls);
+
+        const card = document.createElement('div');
+        card.className = 'table-card';
+        card.innerHTML = `
+          <div class="table-head" style="background:${avg.color}">
+            <div class="left">
+              <div class="table-badge">${avg.value}</div>
+              <div>
+                <div contenteditable="true" onblur="window.renameTable('${table.id}', this.textContent)" style="font-size:18px">${table.name}</div>
+                <div style="font-size:12px;opacity:.92">Niveau moyen : ${avg.label}</div>
+              </div>
+            </div>
+            <span class="pill ${avg.className}" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.2)">${avg.label}</span>
+          </div>
+          <div class="table-body">
+            <div class="students-visual"></div>
+            <div class="small-card" style="margin-top:14px">
+              <button class="btn-light" onclick="window.addStudentToTable('${table.id}')">+ Ajouter un élève à cette table</button>
+            </div>
+          </div>
+        `;
+        const visual = card.querySelector('.students-visual');
+
+        table.students.forEach(student => {
+          const blocked = student.absent || student.exclu;
+          const general = studentGeneralLevel(student, cls);
+
+          const tile = document.createElement('div');
+          tile.className = 'student-tile' + (blocked ? ' blocked' : '');
+          tile.innerHTML = `
+            <div class="student-top">
+              <div>
+                <div class="student-name" contenteditable="true" onblur="window.renameStudent('${table.id}','${student.id}', this.textContent)">${student.name}</div>
+                <div class="student-meta">${blocked ? (student.absent ? 'Absent' : 'Exclusion') : (student.ebep ? escapeHtml(student.ebep) : 'Élève actif')}</div>
+              </div>
+            </div>
+
+            <div class="level-strip" style="background:${general.color}" title="Niveau de réponse au questionnement : ${general.label}"></div>
+
+            <div class="status-codes">
+              ${statusChip('Ab', student.absent, student.absent ? 'dark' : '', 'Absent')}
+              ${statusChip('Di', student.discute || 0, counterTone(student.discute, 3, 5), 'Discute : jaune à 3 clics, rouge à 5 clics')}
+              ${statusChip('Pa', student.participe || 0, counterTone(student.participe, 1, 3), 'Participe')}
+              ${statusChip('In', student.incident || 0, (student.incident||0) ? 'alert' : '', 'Incident')}
+              ${statusChip('Ex', student.exclu, student.exclu ? 'dark' : '', 'Exclusion')}
+            </div>
+
+            ${blocked ? '' : `
+              <div class="competence-codes">
+                ${COMPETENCE_GROUPS.map(group => competenceGroupChip(group, student, table.id)).join('')}
+              </div>
+            `}
+
+            ${(student.incident||0) ? `
+              <div class="incident-note">
+                <textarea maxlength="120" ${blocked ? 'disabled' : ''} placeholder="Note incident, une ligne..." onblur="window.saveIncidentNote('${table.id}','${student.id}', this.value)">${student.incidentNote || ''}</textarea>
+              </div>
+            ` : ''}
+          `;
+          attachStudentTileHandlers(tile, table.id, student.id);
+          visual.appendChild(tile);
+        });
+
+        mount.appendChild(card);
+      });
+    }
+
+    function allStudentsWithTable(cls){
+      return cls.tables.flatMap(table => table.students.map(student => ({ table, student })));
+    }
+
+
+    function normalizeTableName(raw){
+      const txt = String(raw || '').trim();
+      if(!txt) return '';
+      const m = txt.match(/^(?:table\s*)?(?:t)?\s*(\d+)$/i);
+      return m ? `Table ${m[1]}` : txt.replace(/^T(\d+)$/i, 'Table $1');
+    }
+
+    function parsePastedStudents(raw){
+      const lines = String(raw || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if(!lines.length) return [];
+      let start = 0;
+      let headers = [];
+      const firstParts = lines[0].split(/\t|;|,/).map(x => x.trim().toLowerCase());
+      if(firstParts.some(h => ['nom','prénom','prenom','table','place','ebep'].includes(h))){
+        headers = firstParts;
+        start = 1;
+      }
+      return lines.slice(start).map(line => {
+        const parts = line.split(/\t|;|,/).map(x => x.trim());
+        let nom='', prenom='', table='', place='', ebep='';
+        if(headers.length){
+          const get = (...names) => {
+            const idx = headers.findIndex(h => names.includes(h));
+            return idx >= 0 ? (parts[idx] || '') : '';
+          };
+          nom = get('nom','name'); prenom = get('prénom','prenom','first name','firstname');
+          table = get('table','t'); place = get('place'); ebep = get('ebep','besoin','besoins');
+        } else if(parts.length >= 2 && /^T?\d+|table\s*\d+/i.test(parts[parts.length-1])){
+          table = parts.pop();
+          nom = parts.join(' ');
+        } else if(parts.length >= 3 && /^T?\d+|table\s*\d+/i.test(parts[2])){
+          nom = parts[0]; prenom = parts[1]; table = parts[2]; place = parts[3] || ''; ebep = parts[4] || '';
+        } else {
+          nom = line;
+        }
+        const fullName = [nom, prenom].filter(Boolean).join(' ').trim() || line;
+        return { name: fullName, table: normalizeTableName(table), place, ebep };
+      }).filter(x => x.name);
+    }
+
+    function makeStudentFromImport(item){
+      const student = createStudent(item.name);
+      student.place = item.place || '';
+      student.ebep = item.ebep || '';
+      getActiveClass().course?.skills?.forEach(skill => student.competences[skill] = 'jaune');
+      return student;
+    }
+
+    function buildClassFromImportedRows(cls, rows, tableSize){
+      const hasTables = rows.some(r => r.table);
+      cls.tables = [];
+      cls.unplacedStudents = [];
+      if(hasTables){
+        rows.forEach(item => {
+          const student = createStudent(item.name);
+          student.place = item.place || '';
+          student.ebep = item.ebep || '';
+          cls.course.skills.forEach(skill => student.competences[skill] = 'jaune');
+          const tableName = item.table || '';
+          if(!tableName){ cls.unplacedStudents.push(student); return; }
+          let table = cls.tables.find(t => t.name === tableName);
+          if(!table){ table = createTable(tableName); cls.tables.push(table); }
+          table.students.push(student);
+        });
+      } else if(tableSize > 0){
+        rows.forEach((item, index) => {
+          const tableIndex = Math.floor(index / tableSize);
+          if(!cls.tables[tableIndex]) cls.tables[tableIndex] = createTable(`Table ${tableIndex + 1}`);
+          const student = createStudent(item.name);
+          student.place = item.place || '';
+          student.ebep = item.ebep || '';
+          cls.course.skills.forEach(skill => student.competences[skill] = 'jaune');
+          cls.tables[tableIndex].students.push(student);
+        });
+      } else {
+        cls.tables = [createTable('Table 1')];
+        cls.unplacedStudents = rows.map(item => {
+          const student = createStudent(item.name);
+          student.place = item.place || '';
+          student.ebep = item.ebep || '';
+          cls.course.skills.forEach(skill => student.competences[skill] = 'jaune');
+          return student;
+        });
+      }
+      if(!cls.tables.length) cls.tables = [createTable('Table 1')];
+    }
+
+    function distributeStudentsInTables(cls, names, tableSize){
+      const rows = names.map(name => typeof name === 'string' ? { name, table:'', place:'', ebep:'' } : name);
+      buildClassFromImportedRows(cls, rows, tableSize);
+    }
+
+    function addStudentsToCurrentClass(rows){
+      const cls = getActiveClass();
+      const items = rows.map(name => typeof name === 'string' ? { name, table:'', place:'', ebep:'' } : name);
+      const hasTables = items.some(i => i.table);
+      if(hasTables){
+        items.forEach(item => {
+          const student = createStudent(item.name);
+          student.place = item.place || '';
+          student.ebep = item.ebep || '';
+          cls.course.skills.forEach(skill => student.competences[skill] = 'jaune');
+          if(!item.table){ cls.unplacedStudents.push(student); return; }
+          let table = cls.tables.find(t => t.name === item.table);
+          if(!table){ table = createTable(item.table); cls.tables.push(table); }
+          table.students.push(student);
+        });
+      } else {
+        items.forEach(item => {
+          const student = createStudent(item.name);
+          student.place = item.place || '';
+          student.ebep = item.ebep || '';
+          cls.course.skills.forEach(skill => student.competences[skill] = 'jaune');
+          cls.unplacedStudents.push(student);
+        });
+      }
+    }
+
+    function renderGroupes(){
+      const cls = getActiveClass();
+      if(!cls.groups) cls.groups = [];
+
+      const tableSelect = document.getElementById('groupTableSelect');
+      if(tableSelect){
+        tableSelect.innerHTML = cls.tables.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${t.students.length})</option>`).join('');
+      }
+
+      const checks = document.getElementById('manualStudentChecks');
+      if(checks){
+        checks.innerHTML = allStudentsWithTable(cls).map(({table, student}) => `
+          <label class="check-line">
+            <input type="checkbox" value="${student.id}" />
+            <span><strong>${escapeHtml(student.name)}</strong><br><span class="mini-muted">${escapeHtml(table.name)}</span></span>
+          </label>
+        `).join('') || '<p class="muted">Ajoute d’abord des élèves.</p>';
+      }
+
+      const evalSkill = document.getElementById('evalSkill');
+      if(evalSkill){
+        evalSkill.innerHTML = cls.course.skills.map(skill => `<option value="${encodeURIComponent(skill)}">${escapeHtml(skill)}</option>`).join('');
+      }
+
+      const evalTarget = document.getElementById('evalTarget');
+      if(evalTarget){
+        const tableOptions = cls.tables.map(t => `<option value="table:${t.id}">Table entière — ${escapeHtml(t.name)}</option>`).join('');
+        const groupOptions = cls.groups.map(g => `<option value="group:${g.id}">Groupe — ${escapeHtml(g.name)}</option>`).join('');
+        evalTarget.innerHTML = `<option value="class:all">Toute la classe</option>${tableOptions}${groupOptions}`;
+      }
+
+      const list = document.getElementById('groupsList');
+      if(list){
+        list.innerHTML = cls.groups.length ? cls.groups.map(group => {
+          const names = allStudentsWithTable(cls).filter(({student}) => group.studentIds.includes(student.id)).map(({student}) => student.name);
+          return `
+            <div class="small-card">
+              <strong>${escapeHtml(group.name)}</strong>
+              <div class="muted" style="margin-top:6px">${names.map(escapeHtml).join(', ') || 'Aucun élève'}</div>
+              <button class="btn-red" style="margin-top:8px" onclick="window.deleteGroup('${group.id}')">Supprimer le groupe</button>
+            </div>
+          `;
+        }).join('') : '<p class="muted">Aucun groupe pour l’instant.</p>';
+      }
+    }
+
+    function renderBilanSuivi() {
+      const cls = getActiveClass();
+      const mount = document.getElementById('bilanTables');
+      mount.innerHTML = '';
+
+      cls.tables.forEach(table => {
+        const avg = tableAverageLevel(table, cls);
+        const active = table.students.filter(s => !s.absent && !s.exclu).length;
+        const absent = table.students.filter(s => s.absent).length;
+        const exclu = table.students.filter(s => s.exclu).length;
+        const discuss = table.students.reduce((n,s)=>n+(s.discute||0),0);
+        const incidents = table.students.reduce((n,s)=>n+(s.incident||0),0);
+
+        const block = document.createElement('div');
+        block.className = 'bilan-card';
+        block.innerHTML = `
+          <div class="bilan-head">
+            <div>
+              <strong style="font-size:18px">${table.name}</strong>
+              <div class="muted" style="font-size:13px">Synthèse de la table</div>
+            </div>
+            <span class="pill ${avg.className}">${avg.label}</span>
+          </div>
+          <div class="bilan-grid">
+            <div class="stat-box"><span class="muted" style="font-size:12px">Actifs</span><strong>${active}</strong></div>
+            <div class="stat-box"><span class="muted" style="font-size:12px">Absents</span><strong>${absent}</strong></div>
+            <div class="stat-box"><span class="muted" style="font-size:12px">Exclusions</span><strong>${exclu}</strong></div>
+            <div class="stat-box"><span class="muted" style="font-size:12px">Discute</span><strong>${discuss}</strong></div>
+            <div class="stat-box"><span class="muted" style="font-size:12px">Incidents</span><strong>${incidents}</strong></div>
+            <div class="stat-box"><span class="muted" style="font-size:12px">Niveau</span><strong>${avg.label}</strong></div>
+          </div>
+        `;
+        mount.appendChild(block);
+      });
+    }
+
+
+    function skillAbbrev(skill) {
+      const txt = String(skill || '').toLowerCase();
+      if (txt.includes('créer') || txt.includes('creer') || txt.includes('création') || txt.includes('creation')) return 'Cr';
+      if (txt.includes('expériment') || txt.includes('experiment') || txt.includes('produire') || txt.includes('plastique')) return 'Ex';
+      if (txt.includes('question') || txt.includes('réfléch') || txt.includes('reflech') || txt.includes('choix') || txt.includes('intention')) return 'Qst';
+      if (txt.includes('organis') || txt.includes('mettre en œuvre') || txt.includes('mise en œuvre') || txt.includes('travail')) return 'Org';
+      if (txt.includes('expliquer') || txt.includes('oral') || txt.includes('verbal') || txt.includes('démarche') || txt.includes('demarche')) return 'Expl';
+      if (txt.includes('connaître') || txt.includes('connaitre') || txt.includes('culture') || txt.includes('référence') || txt.includes('reference')) return 'Cult';
+      const words = String(skill || 'Cp').trim().split(/\s+/).filter(Boolean);
+      if (!words.length) return 'Cp';
+      if (words.length === 1) return words[0].slice(0,3);
+      return words.slice(0,2).map(w => w[0]).join('').slice(0,3).toUpperCase();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+
+    function nextLevelKey(current){
+      const idx = POSITION_LEVELS.findIndex(l => l.key === current);
+      return POSITION_LEVELS[(idx + 1) % POSITION_LEVELS.length].key;
+    }
+
+    function cycleStudentLevel(tableId, studentId){
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table?.students.find(s => s.id === studentId);
+      if(!student || student.absent || student.exclu) return;
+      student.niveau = nextLevelKey(student.niveau || 'jaune');
+      render();
+    }
+
+    window.cycleCompetenceGroup = function(tableId, studentId, groupKey){
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table?.students.find(s => s.id === studentId);
+      if(!student || student.absent || student.exclu) return;
+      if(!student.competenceGroups) student.competenceGroups = {};
+      student.competenceGroups[groupKey] = nextLevelKey(student.competenceGroups[groupKey] || 'jaune');
+      render();
+    };
+
+    function attachStudentTileHandlers(tile, tableId, studentId){
+      let timer = null;
+      let longDone = false;
+      const interactive = el => el.closest('button, textarea, input, select, [contenteditable="true"]');
+      tile.addEventListener('pointerdown', e => {
+        if(interactive(e.target)) return;
+        longDone = false;
+        timer = setTimeout(() => {
+          longDone = true;
+          showQuickMenu(tableId, studentId);
+        }, 550);
+      });
+      ['pointerup','pointerleave','pointercancel','pointermove'].forEach(type => tile.addEventListener(type, () => {
+        if(timer){ clearTimeout(timer); timer = null; }
+      }));
+      tile.addEventListener('click', e => {
+        if(interactive(e.target)) return;
+        if(longDone){ longDone = false; return; }
+        cycleStudentLevel(tableId, studentId);
+      });
+      tile.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        showQuickMenu(tableId, studentId);
+      });
+    }
+
+    function closeQuickMenu(){
+      const old = document.getElementById('quickMenuBackdrop');
+      if(old) old.remove();
+    }
+
+    function showQuickMenu(tableId, studentId){
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table?.students.find(s => s.id === studentId);
+      if(!student) return;
+      closeQuickMenu();
+      const blocked = student.absent || student.exclu;
+      const level = getLevel(student.niveau || 'jaune');
+      const div = document.createElement('div');
+      div.id = 'quickMenuBackdrop';
+      div.className = 'quick-menu-backdrop';
+      div.innerHTML = `
+        <div class="quick-menu" onclick="event.stopPropagation()">
+          <h3>${escapeHtml(student.name)}</h3>
+          <div class="muted" style="margin-top:4px">Niveau actuel : <strong>${level.label}</strong> — ${escapeHtml(cls.course.indicators?.[level.key] || '')}</div>
+          <div class="menu-grid">
+            <button class="btn-gray" onclick="window.quickMenuAction('${tableId}','${studentId}','absent')">${student.absent ? 'Présent' : 'Absent'}</button>
+            <button class="btn-orange" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','discute')">Discute +1 (${student.discute||0})</button>
+            <button class="btn-green" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','participe')">Participe +1 (${student.participe||0})</button>
+            <button class="btn-red" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','incident')">Incident +1 (${student.incident||0})</button>
+            <button class="btn-red" onclick="window.quickMenuAction('${tableId}','${studentId}','exclu')">${student.exclu ? 'Retirer exclusion' : 'Exclusion'}</button>
+            <button class="btn-light" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','aVoir')">${student.aVoir ? 'Ne plus marquer à voir' : 'À aller voir'}</button>
+            <button class="btn-light" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','vu')">${student.vu ? 'Vu : retirer' : 'A été vu'}</button>
+            <button class="btn-orange" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','soutenir')">${student.soutenir ? 'Retirer soutien' : 'À soutenir'}</button>
+            <button class="btn-green" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','travail')">${student.travail ? 'Retirer travail' : 'Au travail'}</button>
+            <button class="btn-violet" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','reflexion')">${student.reflexion ? 'Retirer réflexion' : 'En réflexion'}</button>
+            <button class="btn" ${blocked ? 'disabled' : ''} onclick="window.quickMenuAction('${tableId}','${studentId}','niveau')">Couleur suivante</button>
+            <button class="btn-light" onclick="window.quickMenuAction('${tableId}','${studentId}','deplacer')">Déplacer</button>
+          </div>          </div>
+          <button class="btn-gray" style="width:100%;margin-top:12px" onclick="closeQuickMenu()">Fermer</button>
+        </div>
+      `;
+      div.addEventListener('click', closeQuickMenu);
+      document.body.appendChild(div);
+    }
+
+    window.quickToggle = function(tableId, studentId, key) {
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      if (student.absent || student.exclu) return;
+      student[key] = !student[key];
+      render();
+    };
+
+
+    window.quickMenuAction = function(tableId, studentId, action){
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table?.students.find(s => s.id === studentId);
+      if(!student) return;
+      if(action === 'absent'){
+        student.absent = !student.absent;
+        if(student.absent){ student.exclu = false; clearEvalForBlocked(student); }
+      } else if(action === 'exclu'){
+        student.exclu = !student.exclu;
+        if(student.exclu){ student.absent = false; clearEvalForBlocked(student); }
+      } else if(action === 'incident'){
+        if(!(student.absent || student.exclu)) { student.incident = (student.incident || 0) + 1; }
+      } else if(action === 'discute'){
+        if(!(student.absent || student.exclu)) student.discute = (student.discute || 0) + 1;
+      } else if(action === 'participe'){
+        if(!(student.absent || student.exclu)) student.participe = (student.participe || 0) + 1;
+      } else if(action === 'niveau'){
+        if(!(student.absent || student.exclu)) student.niveau = nextLevelKey(student.niveau || 'jaune');
+      } else if(action === 'deplacer'){
+        closeQuickMenu();
+        window.moveStudentPrompt(tableId, studentId);
+        return;
+      } else if(['aVoir','vu','soutenir','travail','reflexion'].includes(action)){
+        if(!(student.absent || student.exclu)) student[action] = !student[action];
+      }
+      closeQuickMenu();
+      render();
+    };
+
+    window.toggleStatus = function(tableId, studentId, key) {
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      if (key === 'absent') {
+        student.absent = !student.absent;
+        if (student.absent) { student.exclu = false; clearEvalForBlocked(student); }
+      } else if (key === 'exclu') {
+        student.exclu = !student.exclu;
+        if (student.exclu) { student.absent = false; clearEvalForBlocked(student); }
+      }
+      render();
+    };
+
+    window.toggleDetail = function(tableId, studentId) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      student.detailOpen = !student.detailOpen;
+      render();
+    };
+
+    window.changeCounter = function(tableId, studentId, field, delta) {
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      if (student.absent || student.exclu) return;
+      student[field] = Math.max(0, (student[field] || 0) + delta);
+      if(field === 'incident' && delta > 0) student.detailOpen = true;
+      render();
+    };
+
+    window.saveIncidentNote = function(tableId, studentId, val) {
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      student.incidentNote = val.split(/\r?\n/)[0].slice(0, 120);
+      saveState();
+    };
+
+    window.saveNotes = function(tableId, studentId, val) {
+      const cls = getActiveClass();
+      const table = cls.tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      student.notes = val;
+      saveState();
+    };
+
+    window.renameTable = function(tableId, text) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      table.name = (text || '').trim() || table.name;
+      render();
+    };
+
+    window.renameStudent = function(tableId, studentId, text) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      student.name = (text || '').trim() || student.name;
+      render();
+    };
+
+
+    window.updateIndicator = function(levelKey, value){
+      const cls = getActiveClass();
+      if(!cls.course.indicators) cls.course.indicators = defaultIndicators();
+      cls.course.indicators[levelKey] = value;
+      saveState();
+    };
+
+    function chooseTablePrompt(defaultText='1'){
+      const cls = getActiveClass();
+      const choices = cls.tables.map((t, i) => `${i+1}. ${t.name}`).join('\n');
+      const pick = prompt(`Choisir la table :\n${choices}\n\nTu peux aussi écrire un nouveau nom de table.`, defaultText);
+      if(pick === null) return null;
+      const n = parseInt(pick, 10);
+      if(!Number.isNaN(n) && cls.tables[n-1]) return cls.tables[n-1];
+      const label = normalizeTableName(pick);
+      if(!label) return null;
+      let table = cls.tables.find(t => t.name.toLowerCase() === label.toLowerCase());
+      if(!table){ table = createTable(label); cls.tables.push(table); }
+      return table;
+    }
+
+    window.placeUnplacedStudent = function(studentId){
+      const cls = getActiveClass();
+      const index = (cls.unplacedStudents || []).findIndex(s => s.id === studentId);
+      if(index < 0) return;
+      const table = chooseTablePrompt('1');
+      if(!table) return;
+      if(table.students.length >= 5 && !confirm('Cette table contient déjà 5 élèves. Ajouter quand même ?')) return;
+      const student = cls.unplacedStudents.splice(index, 1)[0];
+      table.students.push(student);
+      render();
+    };
+
+    window.deleteUnplacedStudent = function(studentId){
+      const cls = getActiveClass();
+      cls.unplacedStudents = (cls.unplacedStudents || []).filter(s => s.id !== studentId);
+      render();
+    };
+
+    window.moveStudentPrompt = function(tableId, studentId){
+      const cls = getActiveClass();
+      const from = cls.tables.find(t => t.id === tableId);
+      const student = from?.students.find(s => s.id === studentId);
+      if(!from || !student) return;
+      const to = chooseTablePrompt('1');
+      if(!to || to.id === from.id) return;
+      if(to.students.length >= 5 && !confirm('Cette table contient déjà 5 élèves. Déplacer quand même ?')) return;
+      from.students = from.students.filter(s => s.id !== studentId);
+      to.students.push(student);
+      render();
+    };
+
+    window.deleteStudent = function(tableId, studentId) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      table.students = table.students.filter(s => s.id !== studentId);
+      render();
+    };
+
+    window.addStudentToTable = function(tableId) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      if (table.students.length >= 5) return alert('Maximum 5 élèves par table.');
+      const student = createStudent(`Élève ${table.students.length + 1}`);
+      getActiveClass().course.skills.forEach(skill => student.competences[skill] = 'jaune');
+      COMPETENCE_GROUPS.forEach(group => student.competenceGroups[group.key] = 'jaune');
+      table.students.push(student);
+      render();
+    };
+
+    window.setCompetence = function(tableId, studentId, skill, levelKey) {
+      const table = getActiveClass().tables.find(t => t.id === tableId);
+      const student = table.students.find(s => s.id === studentId);
+      if (student.absent || student.exclu) return;
+      const realSkill = decodeURIComponent(skill);
+      student.competences[realSkill] = levelKey;
+      render();
+    };
+
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => { state.activeTab = btn.dataset.tab; render(); });
+    });
+
+    document.getElementById('addClassBtn').onclick = () => {
+      const name = prompt('Nom de la classe :', `Classe ${state.classes.length + 1}`);
+      if (name === null) return;
+      const cls = createClass(name || `Classe ${state.classes.length + 1}`);
+      state.classes.push(cls);
+      state.activeClassId = cls.id;
+      render();
+    };
+
+    document.getElementById('addTableBtn').onclick = () => {
+      const cls = getActiveClass();
+      const name = prompt('Nom de la table :', `Table ${cls.tables.length + 1}`);
+      if (name === null) return;
+      cls.tables.push(createTable(name || `Table ${cls.tables.length + 1}`));
+      render();
+    };
+
+    document.getElementById('addStudentBtn').onclick = () => {
+      const cls = getActiveClass();
+      const available = cls.tables.filter(t => t.students.length < 5);
+      if (!available.length) return alert('Toutes les tables ont déjà 5 élèves.');
+      const choices = available.map((t, i) => `${i+1}. ${t.name}`).join('\n');
+      const pick = prompt(`Choisir la table :\n${choices}`, '1');
+      if (pick === null) return;
+      const table = available[Math.max(0, parseInt(pick,10)-1)] || available[0];
+      window.addStudentToTable(table.id);
+    };
+
+    document.getElementById('addSkillBtn').onclick = () => {
+      getActiveClass().course.skills.push(`Compétence ${getActiveClass().course.skills.length + 1}`);
+      render();
+    };
+
+    document.getElementById('saveCourseBtn').onclick = () => {
+      const cls = getActiveClass();
+      cls.course.title = document.getElementById('courseTitle').value.trim();
+      cls.course.demand = document.getElementById('courseDemand').value.trim();
+      cls.course.question = document.getElementById('courseQuestion').value.trim();
+      cls.course.courseClass = document.getElementById('courseClass').value.trim();
+      cls.name = cls.course.courseClass || cls.name;
+      render();
+      alert('Fiche de cours enregistrée.');
+    };
+
+    document.getElementById('courseTitle').addEventListener('blur', () => {
+      getActiveClass().course.title = document.getElementById('courseTitle').value.trim();
+      saveState();
+    });
+    document.getElementById('courseDemand').addEventListener('blur', () => {
+      getActiveClass().course.demand = document.getElementById('courseDemand').value.trim();
+      saveState();
+    });
+    document.getElementById('courseQuestion').addEventListener('blur', () => {
+      getActiveClass().course.question = document.getElementById('courseQuestion').value.trim();
+      saveState();
+    });
+
+    document.getElementById('courseClass').addEventListener('blur', () => {
+      const cls = getActiveClass();
+      cls.course.courseClass = document.getElementById('courseClass').value.trim();
+      cls.name = cls.course.courseClass || cls.name;
+      render();
+    });
+
+    function datedStamp(){
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}`;
+    }
+
+    function downloadJsonBackup(prefix = 'suivi-classe-visuel'){
+      const cls = getActiveClass();
+      const payload = {
+        app: 'suivi-classe-visuel',
+        type: 'suivi_seance',
+        version: 'v6-terrain-competences-compactes',
+        exportedAt: new Date().toISOString(),
+        classeId: cls.id,
+        classeNom: cls.name,
+        sujet: cls.course.title || '',
+        demande: cls.course.demand || '',
+        questionnement: cls.course.question || '',
+        competencesEvaluables: cls.course.skills || [],
+        indicateurs: cls.course.indicators || defaultIndicators(),
+        eleves: cls.tables.flatMap(table => table.students.map(student => ({
+          id: student.id,
+          nom: student.name,
+          table: table.name,
+          place: student.place || '',
+          ebep: student.ebep || '',
+          niveau: student.niveau || 'jaune',
+          badges: ['travail','reflexion','soutenir','aVoir','vu'].filter(k => student[k]),
+          incidents: student.incident || 0,
+          discute: student.discute || 0,
+          absent: !!student.absent,
+          exclu: !!student.exclu,
+          competences: student.competences || {},
+          competenceGroups: student.competenceGroups || {},
+          notes: student.notes || ''
+        }))),
+        nonPlaces: (cls.unplacedStudents || []).map(student => ({ id:student.id, nom:student.name, ebep:student.ebep || '', niveau:student.niveau || 'jaune' })),
+        state
+      };
+      const data = JSON.stringify(payload, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${prefix}-${datedStamp()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function normalizeImportedData(parsed){
+      if(parsed && parsed.state && parsed.state.classes) return parsed.state;
+      if(parsed && parsed.classes) return parsed;
+      throw new Error('Format invalide');
+    }
+
+    const LOCAL_BACKUP_KEY = STORAGE_KEY + '-backup-local';
+
+    document.getElementById('exportBtn').onclick = () => {
+      downloadJsonBackup('suivi-classe-visuel');
+    };
+
+    document.getElementById('localBackupBtn').onclick = () => {
+      localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify({
+        savedAt: new Date().toISOString(),
+        state
+      }));
+      alert('Sauvegarde locale créée dans ce navigateur. Elle ne sera pas visible sur un autre appareil.');
+    };
+
+    document.getElementById('restoreLocalBackupBtn').onclick = () => {
+      const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
+      if(!raw) return alert('Aucune sauvegarde locale trouvée dans ce navigateur.');
+      const parsed = JSON.parse(raw);
+      const ok = confirm('Restaurer la sauvegarde locale ? Les données actuellement affichées seront remplacées.');
+      if(!ok) return;
+      state = parsed.state;
+      if (!state.activeClassId && state.classes[0]) state.activeClassId = state.classes[0].id;
+      if (!state.activeTab) state.activeTab = 'suivi-classe';
+      render();
+      alert('Sauvegarde locale restaurée.');
+    };
+
+    document.getElementById('importInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const parsed = JSON.parse(text);
+        const importedState = normalizeImportedData(parsed);
+        const ok = confirm('Importer ce fichier va remplacer les données de ce navigateur. Une sauvegarde locale automatique sera créée avant remplacement. Continuer ?');
+        if(!ok){ e.target.value = ''; return; }
+        localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify({
+          savedAt: new Date().toISOString(),
+          state
+        }));
+        state = importedState;
+        if (!state.activeClassId && state.classes[0]) state.activeClassId = state.classes[0].id;
+        if (!state.activeTab) state.activeTab = 'suivi-classe';
+        render();
+        alert('Import réussi. Une sauvegarde locale de l’ancien état a été créée.');
+      } catch {
+        alert('Import impossible : le fichier JSON n\'est pas reconnu.');
+      }
+      e.target.value = '';
+    });
+
+
+    document.getElementById('createClassFromListBtn').onclick = () => {
+      const className = document.getElementById('quickClassName').value.trim() || `Classe ${state.classes.length + 1}`;
+      const raw = document.getElementById('quickStudentsList').value;
+      const rows = parsePastedStudents(raw);
+      if(!rows.length) return alert('Colle au moins un nom d’élève.');
+      const tableSize = parseInt(document.getElementById('quickTableSize').value, 10) || 0;
+      const cls = createClass(className);
+      cls.course.courseClass = className;
+      distributeStudentsInTables(cls, rows, tableSize);
+      state.classes.push(cls);
+      state.activeClassId = cls.id;
+      state.activeTab = 'suivi-classe';
+      document.getElementById('quickStudentsList').value = '';
+      render();
+    };
+
+    document.getElementById('addListToCurrentClassBtn').onclick = () => {
+      const raw = document.getElementById('quickStudentsList').value;
+      const rows = parsePastedStudents(raw);
+      if(!rows.length) return alert('Colle au moins un nom d’élève.');
+      addStudentsToCurrentClass(rows);
+      state.activeTab = 'suivi-classe';
+      document.getElementById('quickStudentsList').value = '';
+      render();
+    };
+
+    document.getElementById('createGroupFromTableBtn').onclick = () => {
+      const cls = getActiveClass();
+      if(!cls.groups) cls.groups = [];
+      const tableId = document.getElementById('groupTableSelect').value;
+      const table = cls.tables.find(t => t.id === tableId);
+      if(!table || !table.students.length) return alert('Cette table ne contient pas encore d’élèves.');
+      const name = document.getElementById('groupName').value.trim() || table.name;
+      cls.groups.push({ id: uid(), name, studentIds: table.students.map(s => s.id) });
+      document.getElementById('groupName').value = '';
+      render();
+    };
+
+    document.getElementById('createManualGroupBtn').onclick = () => {
+      const cls = getActiveClass();
+      if(!cls.groups) cls.groups = [];
+      const selected = Array.from(document.querySelectorAll('#manualStudentChecks input:checked')).map(i => i.value);
+      if(selected.length < 2) return alert('Sélectionne au moins 2 élèves pour former un groupe.');
+      const name = document.getElementById('groupName').value.trim() || `Groupe ${cls.groups.length + 1}`;
+      cls.groups.push({ id: uid(), name, studentIds: selected });
+      document.getElementById('groupName').value = '';
+      render();
+    };
+
+    document.getElementById('applyCollectiveEvalBtn').onclick = () => {
+      const cls = getActiveClass();
+      const target = document.getElementById('evalTarget').value;
+      const skill = decodeURIComponent(document.getElementById('evalSkill').value || '');
+      const level = document.getElementById('evalLevel').value;
+      if(!skill) return alert('Aucune compétence disponible.');
+      let ids = [];
+      if(target === 'class:all'){
+        ids = allStudentsWithTable(cls).map(({student}) => student.id);
+      } else if(target.startsWith('table:')){
+        const table = cls.tables.find(t => t.id === target.replace('table:', ''));
+        ids = table ? table.students.map(s => s.id) : [];
+      } else if(target.startsWith('group:')){
+        const group = cls.groups.find(g => g.id === target.replace('group:', ''));
+        ids = group ? group.studentIds : [];
+      }
+      if(!ids.length) return alert('La cible choisie ne contient aucun élève.');
+      cls.tables.forEach(table => table.students.forEach(student => {
+        if(ids.includes(student.id) && !student.absent && !student.exclu){
+          student.competences[skill] = level;
+        }
+      }));
+      render();
+    };
+
+    window.deleteGroup = function(groupId){
+      const cls = getActiveClass();
+      cls.groups = (cls.groups || []).filter(g => g.id !== groupId);
+      render();
+    };
+
+
+    render();
+  </script>
+</body>
+</html>
