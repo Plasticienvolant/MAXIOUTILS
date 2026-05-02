@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arts plastiques — Mon compagnon de route</title>
+<style>
+:root{
+  --bg:#f5efe9;--ink:#111827;--muted:#6b7280;--line:#ead9cf;
+  --peach:#e8bda8;--peach2:#f6d9c9;--dark:#111827;
+  --disabled:#e5e7eb;--disabledText:#6b7280;
+  --shadow:0 14px 34px rgba(15,23,42,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top left,#fbf7f4 0,#f5efe9 48%,#efe7df 100%);color:var(--ink)}
+.wrap{max-width:1240px;margin:auto;padding:18px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:28px;padding:14px 18px;box-shadow:0 8px 20px rgba(15,23,42,.06);position:sticky;top:14px;z-index:20}
+.brand-small{font-size:12px;font-weight:950;letter-spacing:.16em}.brand-big{font-size:28px;font-weight:950;line-height:1;margin-top:5px}
+.nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.nav button{border:0;border-radius:999px;padding:10px 13px;background:#eef2f7;color:#111827;font-weight:900;cursor:pointer}.nav .dark{background:var(--dark);color:white}
+.screen{display:none}.screen.active{display:block}
+.home{min-height:calc(100vh - 110px);display:flex;align-items:center;justify-content:center;padding:26px 0 38px}
+.home-grid{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:38px}
+.big-tile{text-align:center;cursor:pointer;text-decoration:none;color:var(--ink);user-select:none;transition:transform .16s ease}.big-tile:hover{transform:translateY(-4px)}
+.big-icon{width:245px;height:245px;max-width:100%;margin:0 auto 18px;border-radius:46px;background:var(--peach);box-shadow:var(--shadow);display:grid;place-items:center;font-size:116px}
+.big-title{margin:0;font-size:31px;line-height:1.05;font-weight:950}.big-sub{margin:8px 0 0;color:var(--muted);font-size:14px;font-weight:800}
+.page{padding:24px 0 34px}.page-head{text-align:center;margin:18px 0 24px}
+.section-icon{width:132px;height:132px;border-radius:34px;background:var(--peach);box-shadow:var(--shadow);display:grid;place-items:center;font-size:68px;margin:0 auto 14px}
+.page-head h1{margin:0;font-size:42px;line-height:1}.page-head p{margin:9px 0 0;color:var(--muted);font-size:15px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.cards.two{grid-template-columns:repeat(2,1fr);max-width:780px;margin:auto}.cards.one{grid-template-columns:1fr;max-width:470px;margin:auto}
+.card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:32px;box-shadow:var(--shadow);min-height:210px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--ink);text-decoration:none;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;position:relative}
+.card:hover{transform:translateY(-3px);background:#fff;box-shadow:0 16px 34px rgba(15,23,42,.13)}
+.card.disabled{cursor:not-allowed;background:rgba(255,255,255,.62);color:var(--disabledText)}.card.disabled:hover{transform:none;box-shadow:var(--shadow)}
+.card-icon{width:94px;height:94px;border-radius:28px;background:var(--peach2);border:1px solid #efcdbd;display:grid;place-items:center;font-size:52px;margin-bottom:14px}.card.disabled .card-icon{background:var(--disabled);border-color:#d1d5db}
+.card h2{margin:0;font-size:21px;line-height:1.08}.card p{margin:8px 0 0;color:var(--muted);font-size:13px;font-weight:850}
+.status{position:absolute;top:13px;right:13px;font-size:11px;font-weight:950;padding:5px 8px;border-radius:999px;background:#dcfce7;color:#166534}.status.todo{background:#f1f5f9;color:#475569}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 0}
+@media(max-width:1080px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){.home-grid{grid-template-columns:1fr}.big-icon{width:170px;height:170px;border-radius:38px;font-size:86px}.big-title{font-size:27px}.cards,.cards.two,.cards.one{grid-template-columns:1fr;max-width:none}}
+@media(max-width:560px){.wrap{padding:12px}.top{align-items:flex-start;flex-direction:column;border-radius:22px;top:8px}.brand-big{font-size:22px}.nav{justify-content:flex-start}.home{min-height:auto;padding:28px 0}.home-grid{gap:24px}.big-icon{width:130px;height:130px;border-radius:32px;font-size:68px;margin-bottom:12px}.big-title{font-size:24px}.big-sub{font-size:12px}.section-icon{width:102px;height:102px;border-radius:28px;font-size:54px}.page-head h1{font-size:34px}.card{min-height:112px;border-radius:24px;padding:12px;display:grid;grid-template-columns:72px 1fr;column-gap:12px;text-align:left;align-items:center;justify-content:initial}.card-icon{width:72px;height:72px;border-radius:22px;font-size:38px;margin:0;grid-row:1 / span 2}.card h2{font-size:20px}.card p{font-size:12px}.status{position:static;justify-self:start;margin-top:6px;grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div><div class="brand-small">ARTS PLASTIQUES</div><div class="brand-big">MON COMPAGNON DE ROUTE</div></div>
+  <nav class="nav">
+    <button class="dark" onclick="showScreen('accueil')">Accueil</button>
+    <button onclick="showScreen('mon-cours')">Mon cours</button>
+    <button onclick="showScreen('en-classe')">En classe</button>
+    <button onclick="showScreen('bilan')">Bilan</button>
+  </nav>
+</header>
+<main>
+<section id="accueil" class="screen active"><div class="home"><div class="home-grid">
+  <a class="big-tile" onclick="showScreen('mon-cours')"><div class="big-icon">🧠</div><h1 class="big-title">Mon cours</h1><p class="big-sub">préparer · organiser</p></a>
+  <a class="big-tile" onclick="showScreen('en-classe')"><div class="big-icon">👁️</div><h1 class="big-title">En classe</h1><p class="big-sub">observer · garder trace</p></a>
+  <a class="big-tile" onclick="showScreen('bilan')"><div class="big-icon">📈</div><h1 class="big-title">Le bilan</h1><p class="big-sub">relire · formuler</p></a>
+</div></div></section>
+
+<section id="mon-cours" class="screen"><div class="page"><div class="page-head"><div class="section-icon">🧠</div><h1>Mon cours</h1><p>Préparer · organiser · retrouver</p></div>
+<div class="cards">
+  <a class="card" href="./noyau_ecosysteme_simplifie_app3_reservoir_v2.xlsx"><span class="status">relié</span><div class="card-icon">📗</div><h2>Noyau Excel</h2><p>mémoire commune</p></a>
+  <a class="card" href="./app3_progression_fiches_reservoir_v2_1_compatible_noyau_v2.html"><span class="status">relié</span><div class="card-icon">🧩</div><h2>Réservoir</h2><p>fiches prêtes</p></a>
+  <a class="card" href="./app3_progression_fiches_reservoir_v2_1_compatible_noyau_v2.html"><span class="status">relié</span><div class="card-icon">👥</div><h2>Classes</h2><p>choisir la classe</p></a>
+  <a class="card" href="./app3_progression_fiches_reservoir_v2_1_compatible_noyau_v2.html"><span class="status">relié</span><div class="card-icon">📅</div><h2>Progression</h2><p>placer l’année</p></a>
+  <div class="card disabled"><span class="status todo">à relier</span><div class="card-icon">🕒</div><h2>EDT</h2><p>repères horaires</p></div>
+  <div class="card disabled"><span class="status todo">à relier</span><div class="card-icon">🖼️</div><h2>Références</h2><p>œuvres et images</p></div>
+</div></div></section>
+
+<section id="en-classe" class="screen"><div class="page"><div class="page-head"><div class="section-icon">👁️</div><h1>En classe</h1><p>Observer · positionner · exporter</p></div>
+<div class="cards one">
+  <a class="card" href="./app_suivi_terrain_simple_noyau_v3_tables_rapides.html"><span class="status">relié</span><div class="card-icon">👀</div><h2>Suivi terrain</h2><p>la vérité du terrain</p></a>
+</div></div></section>
+
+<section id="bilan" class="screen"><div class="page"><div class="page-head"><div class="section-icon">📈</div><h1>Le bilan</h1><p>Relire · synthétiser · formuler</p></div>
+<div class="cards two">
+  <a class="card" href="./app4_synthese_eleves.html"><span class="status">relié</span><div class="card-icon">📊</div><h2>Synthèse</h2><p>que disent les traces ?</p></a>
+  <div class="card disabled"><span class="status todo">à relier</span><div class="card-icon">✍️</div><h2>Appréciations</h2><p>formuler justement</p></div>
+</div></div></section>
+</main>
+<div class="footer">Écosystème simplifié · compagnon de route · boussole pédagogique.</div>
+</div>
+<script>
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target=document.getElementById(id);
+  if(target){target.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
+}
+</script>
+</body>
+</html>
